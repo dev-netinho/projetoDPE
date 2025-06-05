@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Presos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Sistema de Cadastro e Acompanhamento de Presos</h1>
+
+        <form id="cadastroForm">
+            <h2>Cadastrar Novo Preso</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="nome">Nome Completo:</label>
+                    <input type="text" id="nome" required>
+                </div>
+                <div class="form-group">
+                    <label for="quemPrendeu">Quem Prendeu:</label>
+                    <input type="text" id="quemPrendeu" required>
+                </div>
+                <div class="form-group">
+                    <label for="quandoPrendeu">Quando Prendeu (Data):</label>
+                    <input type="date" id="quandoPrendeu" required>
+                </div>
+                <div class="form-group">
+                    <label for="dataRevisao">Data para Revisão/Reversão:</label>
+                    <input type="date" id="dataRevisao">
+                </div>
+                <div class="form-group full-width">
+                    <label for="observacao">Observação Geral:</label>
+                    <textarea id="observacao" rows="3"></textarea>
+                </div>
+                 <div class="form-group">
+                    <label for="motivoPrisao">Motivo da Prisão/Artigo(s):</label>
+                    <input type="text" id="motivoPrisao">
+                </div>
+                <div class="form-group">
+                    <label for="localDetencao">Local da Detenção Atual:</label>
+                    <input type="text" id="localDetencao">
+                </div>
+            </div>
+            <button type="submit">Cadastrar Preso</button>
+        </form>
+
+        <hr>
+
+        <h2>Presos Cadastrados</h2>
+        <div class="filtros">
+            <label for="filtroNome">Filtrar por Nome:</label>
+            <input type="text" id="filtroNome" placeholder="Digite para filtrar...">
+        </div>
+        <div id="listaPresos" class="lista-presos-container">
+            </div>
+    </div>
+
+    <audio id="alertaSonoroCurto" src="alert_short.mp3" preload="auto"></audio> <audio id="alertaSonoroLongo" src="alert_long.mp3" preload="auto"></audio> <script src="script.js"></script>
+</body>
+</html>
