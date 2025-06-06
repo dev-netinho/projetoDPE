@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- ESTADO DA APLICAÇÃO ---
     let presos = JSON.parse(localStorage.getItem('presosEryca')) || [];
     let currentPage = 1;
-    const rowsPerPage = 15;
+    const rowsPerPage = 15; // Define quantos registros por página
     const dataAtual = new Date();
 
     // --- FUNÇÕES DE LÓGICA DE NEGÓCIO ---
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('Registro atualizado com sucesso!');
         } else {
             dadosPreso.id = 'preso-' + Date.now();
-            presos.unshift(dadosPreso);
+            presos.unshift(dadosPreso); // Adiciona no início da lista
             showToast('Novo preso cadastrado com sucesso!');
         }
         salvarPresos();
@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const aplicarFiltros = (resetPage = true) => {
         if(resetPage) currentPage = 1;
         let presosFiltrados = [...presos];
-        // ... (a lógica interna de filtragem é a mesma, sem alterações)
+        
         const nomeTermo = filtros.nome.value.toLowerCase();
         if (nomeTermo) presosFiltrados = presosFiltrados.filter(p => p.nome.toLowerCase().includes(nomeTermo));
         if (filtros.local.value) presosFiltrados = presosFiltrados.filter(p => p.unidadePrisional === filtros.local.value);
@@ -184,10 +184,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (filtros.dataFim.value) presosFiltrados = presosFiltrados.filter(p => p.quandoPrendeu <= filtros.dataFim.value);
 
         renderizarTabela(presosFiltrados);
-        return presosFiltrados;
+        return presosFiltrados; // Retorna para uso interno
     };
 
-    Object.values(filtros).forEach(f => f.addEventListener('input', () => aplicarFiltros()));
+    Object.values(filtros).forEach(f => {
+        f.addEventListener('input', () => aplicarFiltros());
+        f.addEventListener('change', () => aplicarFiltros());
+    });
+    
     btnLimparFiltros.addEventListener('click', () => {
         Object.values(filtros).forEach(f => f.value = '');
         aplicarFiltros();

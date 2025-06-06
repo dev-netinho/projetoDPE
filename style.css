@@ -109,7 +109,7 @@ body {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 15px;
 }
-input, select {
+input, select, textarea {
     width: 100%;
     padding: 10px;
     border: 1px solid var(--cor-borda);
@@ -119,7 +119,7 @@ input, select {
     font-size: 0.95em;
     transition: border-color 0.3s, box-shadow 0.3s;
 }
-input:focus, select:focus {
+input:focus, select:focus, textarea:focus {
     outline: none;
     border-color: var(--cor-primaria);
     box-shadow: 0 0 0 2px rgba(0, 95, 115, 0.2);
@@ -279,14 +279,51 @@ tr:hover { background-color: #f5fafd; }
 }
 .page-btn:disabled { color: var(--cor-texto-claro); cursor: not-allowed; }
 
+/* --- RODAPÉ --- */
+.main-footer {
+    text-align: center;
+    padding: 25px;
+    margin-top: 40px;
+    background-color: var(--cor-card);
+    border-top: 1px solid var(--cor-borda);
+    color: var(--cor-texto-claro);
+}
+.main-footer p {
+    margin: 0 0 10px 0;
+    font-size: 0.9em;
+}
+.developer-credit .fa-heart {
+    color: var(--cor-vermelho);
+    transition: transform 0.3s ease;
+}
+.developer-credit:hover .fa-heart {
+    transform: scale(1.2);
+}
+.social-links {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    margin-top: 15px;
+}
+.social-links a {
+    color: var(--cor-texto);
+    font-size: 1.6em;
+    transition: color 0.3s ease, transform 0.3s ease;
+}
+.social-links a:hover {
+    transform: translateY(-3px);
+    color: var(--cor-primaria);
+}
+
+
 /* --- RESPONSIVIDADE --- */
 @media (max-width: 768px) {
     .header-content { flex-direction: column; gap: 15px; }
     .filtros-container { grid-template-columns: 1fr 1fr; }
     .form-grid { grid-template-columns: 1fr; }
-    th:nth-child(4), td:nth-child(4),
-    th:nth-child(6), td:nth-child(6),
-    th:nth-child(7), td:nth-child(7) { display: none; } /* Oculta colunas menos críticas em telas menores */
+    th:nth-child(4), td:nth-child(4), /* Unidade */
+    th:nth-child(6), td:nth-child(6), /* Regime */
+    th:nth-child(7), td:nth-child(7) { display: none; } /* Primário */
 }
 @media (max-width: 480px) {
     .filtros-container { grid-template-columns: 1fr; }
