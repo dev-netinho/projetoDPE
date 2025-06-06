@@ -1,188 +1,244 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Referências do DOM
     const form = document.getElementById('cadastroForm');
-    const listaPresosDiv = document.getElementById('listaPresos');
-    const filtroNomeInput = document.getElementById('filtroNome');
+    const tabelaBody = document.getElementById('tabelaPresosBody');
+    const btnSalvar = document.getElementById('btnSalvar');
+    const btnCancelarEdicao = document.getElementById('btnCancelarEdicao');
+    const presoIdInput = document.getElementById('presoId');
+    const contadorRegistros = document.getElementById('contadorRegistros');
+    const paginacaoContainer = document.getElementById('paginacaoContainer'); // Novo
+    const filtros = {
+        nome: document.getElementById('filtroNome'),
+        local: document.getElementById('filtroLocal'),
+        cor: document.getElementById('filtroCor'),
+        regime: document.getElementById('filtroRegime'),
+        dataInicio: document.getElementById('filtroDataInicio'),
+        dataFim: document.getElementById('filtroDataFim'),
+    };
+    const btnLimparFiltros = document.getElementById('btnLimparFiltros');
 
-    // Sons (opcional - requer arquivos .mp3)
-    const alertaSonoroCurto = document.getElementById('alertaSonoroCurto');
-    const alertaSonoroLongo = document.getElementById('alertaSonoroLongo');
+    // Data atual para cálculo consistente
+    const dataAtual = new Date();
 
-    // Carrega presos do localStorage
-    let presos = JSON.parse(localStorage.getItem('presos')) || [];
+    // Estado da aplicação
+    let presos = JSON.parse(localStorage.getItem('presosEryca')) || [];
+    let currentPage = 1;
+    const rowsPerPage = 15; // Define quantos registros por página
 
-    // Função para salvar presos no localStorage
     const salvarPresos = () => {
-        localStorage.setItem('presos', JSON.stringify(presos));
+        localStorage.setItem('presosEryca', JSON.stringify(presos));
     };
 
-    // Função para calcular dias preso
     const calcularDiasPreso = (dataPrisao) => {
-        if (!dataPrisao) return 'N/A';
+        if (!dataPrisao) return 0;
         const dataInicio = new Date(dataPrisao);
-        const dataAtual = new Date();
-        // Zera a hora para comparar apenas as datas
-        dataInicio.setHours(0, 0, 0, 0);
-        dataAtual.setHours(0, 0, 0, 0);
-        const diferenca = dataAtual.getTime() - dataInicio.getTime();
-        return Math.ceil(diferenca / (1000 * 60 * 60 * 24));
+        const diff = dataAtual.getTime() - dataInicio.getTime();
+        return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+    };
+    
+    const getStatusCor = (diasPreso) => {
+        if (diasPreso <= 30) return 'Amarelo';
+        if (diasPreso <= 90) return 'Laranja';
+        return 'Vermelho';
     };
 
-    // Função para determinar o status de alerta
-    const getStatusAlerta = (dataRevisaoStr) => {
-        if (!dataRevisaoStr) return 'alerta-verde'; // Sem data de revisão, considera normal
-
-        const hoje = new Date();
-        hoje.setHours(0, 0, 0, 0); // Zera horas para comparação de dias
-
-        const dataRevisao = new Date(dataRevisaoStr);
-        dataRevisao.setHours(0,0,0,0); // Zera horas
-
-        const umDiaEmMs = 1000 * 60 * 60 * 24;
-        const diffEmDias = Math.round((dataRevisao - hoje) / umDiaEmMs);
-
-        if (diffEmDias < 0) {
-            return 'alerta-vermelho'; // Data de revisão passou
-        } else if (diffEmDias <= 7) {
-            return 'alerta-amarelo'; // Data de revisão nos próximos 7 dias
-        }
-        return 'alerta-verde'; // Data de revisão futura ou sem data
+    const resetarFormulario = () => {
+        form.reset();
+        presoIdInput.value = '';
+        btnSalvar.textContent = 'Salvar Registro';
+        btnCancelarEdicao.classList.add('hidden');
+        document.querySelector('h2').textContent = 'Cadastrar Novo Preso';
     };
 
-    // Função para tocar som (exemplo)
-    const tocarSom = (tipo) => {
-        // Descomente e certifique-se que os arquivos .mp3 existem na mesma pasta
-        /*
-        if (tipo === 'curto' && alertaSonoroCurto) {
-            alertaSonoroCurto.play().catch(e => console.warn("Erro ao tocar som curto:", e));
-        } else if (tipo === 'longo' && alertaSonoroLongo) {
-            alertaSonoroLongo.play().catch(e => console.warn("Erro ao tocar som longo:", e));
-        }
-        */
-       console.log(`Placeholder: Tocar som do tipo ${tipo}`);
-    };
+    // FUNÇÃO ATUALIZADA PARA LIDAR COM A PAGINAÇÃO
+    const renderizarTabela = (lista = presos) => {
+        tabelaBody.innerHTML = '';
+        
+        // Corta a lista para exibir apenas os itens da página atual
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        const paginatedItems = lista.slice(start, end);
 
-    // Função para renderizar a lista de presos
-    const renderizarPresos = (presosFiltrados = presos) => {
-        listaPresosDiv.innerHTML = ''; // Limpa a lista atual
-        if (presosFiltrados.length === 0 && presos.length > 0 && filtroNomeInput.value) {
-             listaPresosDiv.innerHTML = '<p class="nenhum-resultado">Nenhum preso encontrado com este nome.</p>';
-        }
-
-        presosFiltrados.sort((a, b) => new Date(b.quandoPrendeu) - new Date(a.quandoPrendeu)); // Mais recentes primeiro
-
-        presosFiltrados.forEach((preso, index) => {
+        paginatedItems.forEach(preso => {
             const diasPreso = calcularDiasPreso(preso.quandoPrendeu);
-            const classeAlerta = getStatusAlerta(preso.dataRevisao);
+            const statusCor = getStatusCor(diasPreso);
+            const classeCor = `alerta-${statusCor.toLowerCase()}`;
 
-            const presoCard = document.createElement('div');
-            presoCard.classList.add('preso-card', classeAlerta);
-            presoCard.dataset.id = preso.id;
-
-            presoCard.innerHTML = `
-                <h3>${preso.nome}</h3>
-                <p><strong>ID:</strong> ${preso.id.slice(-6)}</p> <p><strong>Preso por:</strong> ${preso.quemPrendeu}</p>
-                <p><strong>Data da Prisão:</strong> ${new Date(preso.quandoPrendeu).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</p>
-                <p class="dias-preso"><strong>Dias Preso:</strong> ${diasPreso}</p>
-                <p><strong>Data para Revisão:</strong> ${preso.dataRevisao ? new Date(preso.dataRevisao).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Não definida'}</p>
-                <p><strong>Motivo:</strong> ${preso.motivoPrisao || 'Não informado'}</p>
-                <p><strong>Local:</strong> ${preso.localDetencao || 'Não informado'}</p>
-                <p><strong>Observações:</strong> ${preso.observacao || 'Nenhuma'}</p>
-                <div class="acoes">
-                    <button class="btn-editar" onclick="editarPreso('${preso.id}')">Editar</button>
-                    <button class="btn-excluir" onclick="excluirPreso('${preso.id}')">Excluir</button>
-                </div>
+            const tr = document.createElement('tr');
+            tr.className = classeCor;
+            tr.innerHTML = `
+                <td><span class="status-dot" title="${statusCor}"></span></td>
+                <td>${preso.nome}</td>
+                <td>${diasPreso}</td>
+                <td>${preso.unidadePrisional}</td>
+                <td>${new Date(preso.quandoPrendeu).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</td>
+                <td>${preso.regimeProvavel}</td>
+                <td>${preso.reuPrimario}</td>
+                <td>${preso.ultimaRevisao ? new Date(preso.ultimaRevisao).toLocaleDateString('pt-BR', {timeZone: 'UTC'}) : 'N/A'}</td>
+                <td>
+                    <button class="btn-acao btn-editar" onclick="prepararEdicao('${preso.id}')">Editar</button>
+                    <button class="btn-acao btn-excluir" onclick="excluirPreso('${preso.id}')">Excluir</button>
+                </td>
             `;
-            listaPresosDiv.appendChild(presoCard);
+            tabelaBody.appendChild(tr);
+        });
+        
+        contadorRegistros.textContent = `Mostrando ${paginatedItems.length} de ${lista.length} registros. Página ${currentPage}.`;
+        setupPaginacao(lista); // Chama a função que cria os botões
+    };
 
-            // Toca som para alertas críticos ao renderizar (exemplo)
-            if (classeAlerta === 'alerta-vermelho') {
-                // tocarSom('longo'); // Pode ser irritante se muitos estiverem assim
-            } else if (classeAlerta === 'alerta-amarelo') {
-                // tocarSom('curto');
+    // NOVA FUNÇÃO PARA CRIAR OS BOTÕES DE PAGINAÇÃO
+    const setupPaginacao = (items) => {
+        paginacaoContainer.innerHTML = "";
+        const pageCount = Math.ceil(items.length / rowsPerPage);
+
+        if (pageCount <= 1) return; // Não mostra paginação se só tem 1 página
+
+        // Botão "Anterior"
+        const prevButton = document.createElement('button');
+        prevButton.classList.add('page-btn');
+        prevButton.innerText = 'Anterior';
+        prevButton.disabled = currentPage === 1;
+        prevButton.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderizarTabela(aplicarFiltros(false));
             }
         });
-    };
+        paginacaoContainer.appendChild(prevButton);
 
-    // Função para lidar com o cadastro
+        // Botões de Página
+        for (let i = 1; i <= pageCount; i++) {
+            const btn = document.createElement('button');
+            btn.classList.add('page-btn');
+            btn.innerText = i;
+            if (i === currentPage) {
+                btn.classList.add('active');
+            }
+            btn.addEventListener('click', () => {
+                currentPage = i;
+                renderizarTabela(aplicarFiltros(false));
+            });
+            paginacaoContainer.appendChild(btn);
+        }
+
+        // Botão "Próxima"
+        const nextButton = document.createElement('button');
+        nextButton.classList.add('page-btn');
+        nextButton.innerText = 'Próxima';
+        nextButton.disabled = currentPage === pageCount;
+        nextButton.addEventListener('click', () => {
+            if (currentPage < pageCount) {
+                currentPage++;
+                renderizarTabela(aplicarFiltros(false));
+            }
+        });
+        paginacaoContainer.appendChild(nextButton);
+    };
+    
     form.addEventListener('submit', (e) => {
         e.preventDefault();
-
-        const novoPreso = {
-            id: 'preso-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9), // ID único
+        const id = presoIdInput.value;
+        const dadosPreso = {
             nome: document.getElementById('nome').value.trim(),
-            quemPrendeu: document.getElementById('quemPrendeu').value.trim(),
+            unidadePrisional: document.getElementById('unidadePrisional').value,
             quandoPrendeu: document.getElementById('quandoPrendeu').value,
-            dataRevisao: document.getElementById('dataRevisao').value,
-            observacao: document.getElementById('observacao').value.trim(),
-            motivoPrisao: document.getElementById('motivoPrisao').value.trim(),
-            localDetencao: document.getElementById('localDetencao').value.trim()
+            ultimaRevisao: document.getElementById('ultimaRevisao').value,
+            reuPrimario: document.getElementById('reuPrimario').value,
+            regimeProvavel: document.getElementById('regimeProvavel').value,
+            observacao: document.getElementById('observacao').value.trim()
         };
 
-        if (!novoPreso.nome || !novoPreso.quemPrendeu || !novoPreso.quandoPrendeu) {
-            alert("Nome, Quem Prendeu e Quando Prendeu são campos obrigatórios.");
-            return;
+        if (id) { // Editando
+            const index = presos.findIndex(p => p.id === id);
+            if (index > -1) {
+                presos[index] = { ...presos[index], ...dadosPreso };
+            }
+        } else { // Cadastrando
+            dadosPreso.id = 'preso-' + Date.now();
+            presos.unshift(dadosPreso); // Adiciona no início da lista
         }
 
-        presos.push(novoPreso);
         salvarPresos();
-        renderizarPresos();
-        form.reset(); // Limpa o formulário
-
-        // Feedback sonoro e visual ao adicionar
-        const statusNovo = getStatusAlerta(novoPreso.dataRevisao);
-        if (statusNovo === 'alerta-vermelho') {
-            tocarSom('longo');
-            alert(`Atenção! Preso ${novoPreso.nome} cadastrado com status de ALERTA VERMELHO.`);
-        } else if (statusNovo === 'alerta-amarelo') {
-            tocarSom('curto');
-            alert(`Atenção! Preso ${novoPreso.nome} cadastrado com status de ALERTA AMARELO.`);
-        }
+        resetarFormulario();
+        aplicarFiltros();
     });
 
-    // Função para excluir preso
-    window.excluirPreso = (id) => { // Torna a função acessível globalmente para o onclick
-        if (confirm('Tem certeza que deseja excluir este registro?')) {
+    btnCancelarEdicao.addEventListener('click', resetarFormulario);
+    
+    window.prepararEdicao = (id) => {
+        const preso = presos.find(p => p.id === id);
+        if (preso) {
+            presoIdInput.value = preso.id;
+            document.getElementById('nome').value = preso.nome;
+            document.getElementById('unidadePrisional').value = preso.unidadePrisional;
+            document.getElementById('quandoPrendeu').value = preso.quandoPrendeu;
+            document.getElementById('ultimaRevisao').value = preso.ultimaRevisao;
+            document.getElementById('reuPrimario').value = preso.reuPrimario;
+            document.getElementById('regimeProvavel').value = preso.regimeProvavel;
+            document.getElementById('observacao').value = preso.observacao;
+
+            btnSalvar.textContent = 'Atualizar Registro';
+            btnCancelarEdicao.classList.remove('hidden');
+            document.querySelector('h2').textContent = 'Editando Registro';
+            window.scrollTo(0, 0);
+        }
+    };
+    
+    window.excluirPreso = (id) => {
+        if (confirm(`Tem certeza que deseja excluir o registro deste preso?`)) {
             presos = presos.filter(p => p.id !== id);
             salvarPresos();
-            renderizarPresos();
+            aplicarFiltros();
         }
     };
 
-    // Função para editar preso (simplificada: preenche o formulário para edição)
-    // Uma implementação mais robusta teria um modal de edição ou alteraria o formulário existente.
-    window.editarPreso = (id) => {
-        const presoParaEditar = presos.find(p => p.id === id);
-        if (presoParaEditar) {
-            document.getElementById('nome').value = presoParaEditar.nome;
-            document.getElementById('quemPrendeu').value = presoParaEditar.quemPrendeu;
-            document.getElementById('quandoPrendeu').value = presoParaEditar.quandoPrendeu;
-            document.getElementById('dataRevisao').value = presoParaEditar.dataRevisao;
-            document.getElementById('observacao').value = presoParaEditar.observacao;
-            document.getElementById('motivoPrisao').value = presoParaEditar.motivoPrisao;
-            document.getElementById('localDetencao').value = presoParaEditar.localDetencao;
+    // FUNÇÃO DE FILTRO ATUALIZADA
+    const aplicarFiltros = (resetPage = true) => {
+        if(resetPage) currentPage = 1; // Reseta para a página 1 ao aplicar um novo filtro
 
-
-            // Remove o preso da lista para evitar duplicidade ao salvar após edição
-            // Uma abordagem melhor seria atualizar o item existente ou ter um ID de edição no form.
-            presos = presos.filter(p => p.id !== id);
-            salvarPresos(); // Salva a lista sem o item que está sendo editado
-            renderizarPresos(); // Atualiza a lista visualmente
-            alert("Dados do preso carregados no formulário para edição. Faça as alterações e clique em 'Cadastrar Preso' para salvar. O ID original será mantido se você salvar como um 'novo' cadastro após esta ação, ou um novo será gerado. Para manter o ID, você precisaria de uma lógica de 'atualização' mais complexa.");
-            // Para uma edição real, você adicionaria um campo hidden com o ID e o botão mudaria para "Atualizar Preso"
-            // e a lógica de submit faria um update em vez de um push.
+        let presosFiltrados = [...presos];
+        
+        // ... (lógica de filtragem permanece a mesma) ...
+        const nomeTermo = filtros.nome.value.toLowerCase();
+        if (nomeTermo) {
+            presosFiltrados = presosFiltrados.filter(p => p.nome.toLowerCase().includes(nomeTermo));
         }
+        if (filtros.local.value) {
+            presosFiltrados = presosFiltrados.filter(p => p.unidadePrisional === filtros.local.value);
+        }
+        if (filtros.regime.value) {
+            presosFiltrados = presosFiltrados.filter(p => p.regimeProvavel === filtros.regime.value);
+        }
+        if (filtros.cor.value) {
+            presosFiltrados = presosFiltrados.filter(p => {
+                const diasPreso = calcularDiasPreso(p.quandoPrendeu);
+                return getStatusCor(diasPreso) === filtros.cor.value;
+            });
+        }
+        const dataInicio = filtros.dataInicio.value;
+        const dataFim = filtros.dataFim.value;
+        if (dataInicio) {
+            presosFiltrados = presosFiltrados.filter(p => p.quandoPrendeu >= dataInicio);
+        }
+        if (dataFim) {
+            presosFiltrados = presosFiltrados.filter(p => p.quandoPrendeu <= dataFim);
+        }
+        
+        renderizarTabela(presosFiltrados);
+        return presosFiltrados; // Retorna para uso interno
     };
 
-    // Filtro por nome
-    filtroNomeInput.addEventListener('input', (e) => {
-        const termoBusca = e.target.value.toLowerCase();
-        const presosFiltrados = presos.filter(preso =>
-            preso.nome.toLowerCase().includes(termoBusca)
-        );
-        renderizarPresos(presosFiltrados);
+    Object.values(filtros).forEach(filtro => {
+        filtro.addEventListener('input', () => aplicarFiltros());
+        filtro.addEventListener('change', () => aplicarFiltros());
     });
 
+    btnLimparFiltros.addEventListener('click', () => {
+        Object.values(filtros).forEach(filtro => filtro.value = '');
+        aplicarFiltros();
+    });
 
-    // Renderiza a lista inicial
-    renderizarPresos();
+    // Renderização inicial
+    aplicarFiltros();
 });

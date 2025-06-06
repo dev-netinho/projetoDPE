@@ -1,201 +1,204 @@
+:root {
+    --cor-amarelo: #f0ad4e;
+    --cor-laranja: #f37f1a;
+    --cor-vermelho: #d9534f;
+    --cor-fundo-amarelo: #fcf8e3;
+    --cor-fundo-laranja: #fee9d5;
+    --cor-fundo-vermelho: #f2dede;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
     margin: 0;
     padding: 20px;
-    background-color: #f4f4f4;
+    background-color: #e9eef2;
     color: #333;
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: auto;
     background: #fff;
-    padding: 20px;
+    padding: 25px;
     border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.logo {
+    height: 60px;
+    width: auto;
 }
 
 h1, h2 {
-    color: #333;
+    color: #2c3e50;
     text-align: center;
     margin-bottom: 20px;
 }
 
+h1 { font-size: 1.8em; }
+h2 { font-size: 1.5em; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; }
+
 .form-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 20px;
     margin-bottom: 20px;
 }
 
-.form-group {
-    display: flex;
-    flex-direction: column;
-}
+.form-group.full-width { grid-column: 1 / -1; }
+label { margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
 
-.form-group.full-width {
-    grid-column: 1 / -1; /* Ocupa toda a largura */
-}
-
-label {
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
-input[type="text"],
-input[type="date"],
-textarea {
+input[type="text"], input[type="date"], select, textarea {
     width: 100%;
     padding: 10px;
-    border: 1px solid #ddd;
+    border: 1px solid #bdc3c7;
     border-radius: 4px;
-    box-sizing: border-box; /* Importante para o padding não aumentar o tamanho total */
+    box-sizing: border-box;
+    background-color: #ecf0f1;
 }
 
-textarea {
-    resize: vertical;
-}
-
-button[type="submit"] {
-    display: block;
-    width: 100%;
-    padding: 10px 15px;
-    background-color: #5cb85c;
+button {
+    padding: 10px 20px;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
+button:hover { transform: translateY(-2px); }
 
-button[type="submit"]:hover {
-    background-color: #4cae4c;
-}
+#btnSalvar { background-color: #27ae60; }
+#btnSalvar:hover { background-color: #229954; }
+#btnCancelarEdicao { background-color: #7f8c8d; margin-left: 10px; }
+#btnCancelarEdicao:hover { background-color: #626f70; }
 
-hr {
-    margin: 30px 0;
-    border: 0;
-    border-top: 1px solid #eee;
-}
 
-.filtros {
-    margin-bottom: 15px;
+hr { margin: 30px 0; border: 0; border-top: 1px solid #ecf0f1; }
+
+.filtros-container {
     display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.filtros label {
-    margin-bottom: 0;
-}
-
-.filtros input[type="text"] {
-    padding: 8px;
-    width: auto; /* Ajusta a largura ao conteúdo ou container */
-    flex-grow: 1; /* Permite que o input cresça para preencher o espaço */
-    max-width: 300px; /* Limita a largura máxima */
-}
-
-
-.lista-presos-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 20px;
-}
-
-.preso-card {
-    background: #fff;
-    border: 1px solid #ddd;
-    border-left-width: 5px; /* Para o alerta visual */
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
     padding: 15px;
+    background-color: #ecf0f1;
     border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    transition: transform 0.2s ease-in-out;
+}
+.filtros-container > * { flex-grow: 1; min-width: 180px; }
+#btnLimparFiltros { background-color: #e74c3c; flex-grow: 0; }
+#btnLimparFiltros:hover { background-color: #c0392b; }
+
+.table-wrapper { overflow-x: auto; }
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
 }
 
-.preso-card:hover {
-    transform: translateY(-3px);
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
 }
 
-.preso-card h3 {
-    margin-top: 0;
-    color: #007bff; /* Cor do nome do preso */
-}
-
-.preso-card p {
-    margin-bottom: 8px;
-    font-size: 0.95em;
-}
-
-.preso-card strong {
-    color: #555;
-}
-
-.preso-card .dias-preso {
-    font-weight: bold;
-    font-size: 1.1em;
-}
-
-.preso-card .acoes button {
-    padding: 5px 10px;
-    margin-right: 5px;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
+th {
+    background-color: #34495e;
+    color: white;
     font-size: 0.9em;
+    text-transform: uppercase;
 }
 
-.preso-card .acoes .btn-excluir {
-    background-color: #d9534f;
-    color: white;
-}
-.preso-card .acoes .btn-excluir:hover {
-    background-color: #c9302c;
+tr { transition: background-color 0.3s ease; }
+tr:nth-child(even) { background-color: #f9f9f9; }
+tr:hover { background-color: #e8f4fd; }
+
+td .status-dot {
+    height: 15px;
+    width: 15px;
+    border-radius: 50%;
+    display: inline-block;
 }
 
-.preso-card .acoes .btn-editar {
-    background-color: #f0ad4e;
-    color: white;
-}
-.preso-card .acoes .btn-editar:hover {
-    background-color: #ec971f;
-}
+.alerta-amarelo .status-dot { background-color: var(--cor-amarelo); }
+.alerta-amarelo { background-color: var(--cor-fundo-amarelo) !important; }
+.alerta-laranja .status-dot { background-color: var(--cor-laranja); }
+.alerta-laranja { background-color: var(--cor-fundo-laranja) !important; }
+.alerta-vermelho .status-dot { background-color: var(--cor-vermelho); }
+.alerta-vermelho { background-color: var(--cor-fundo-vermelho) !important; }
 
+.btn-acao {
+    padding: 5px 8px;
+    font-size: 0.85em;
+    margin-right: 5px;
+}
+.btn-editar { background-color: #f0ad4e; }
+.btn-excluir { background-color: #d9534f; }
 
-/* Alertas Visuais */
-.alerta-vermelho {
-    border-left-color: #d9534f; /* Vermelho */
-    background-color: #f2dede;
-}
-.alerta-vermelho h3 {
-    color: #a94442;
-}
-
-.alerta-amarelo {
-    border-left-color: #f0ad4e; /* Amarelo */
-    background-color: #fcf8e3;
-}
-.alerta-amarelo h3 {
-    color: #8a6d3b;
-}
-
-.alerta-verde {
-    border-left-color: #5cb85c; /* Verde */
-    background-color: #dff0d8;
-}
-.alerta-verde h3 {
-    color: #3c763d;
-}
-
-/* Estilo para quando não há presos */
-#listaPresos:empty::before {
-    content: "Nenhum preso cadastrado.";
-    display: block;
-    text-align: center;
-    padding: 20px;
-    color: #777;
+#contadorRegistros {
+    margin-top: 15px;
     font-style: italic;
-    grid-column: 1 / -1; /* Para ocupar todo o espaço do grid */
+    color: #7f8c8d;
+}
+
+.hidden { display: none !important; }
+
+/* ... (todos os estilos anteriores permanecem os mesmos) ... */
+
+#contadorRegistros {
+    margin-top: 15px;
+    font-style: italic;
+    color: #7f8c8d;
+}
+
+.hidden { display: none !important; }
+
+/* NOVO: Estilos para a paginação */
+.paginacao-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 25px;
+    gap: 5px;
+}
+
+.page-btn {
+    background-color: #ecf0f1;
+    color: #2c3e50;
+    border: 1px solid #bdc3c7;
+    padding: 8px 14px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.page-btn:hover {
+    background-color: #3498db;
+    color: white;
+    border-color: #2980b9;
+}
+
+.page-btn.active {
+    background-color: #34495e;
+    color: white;
+    border-color: #34495e;
+    font-weight: bold;
+}
+
+.page-btn:disabled {
+    background-color: #ecf0f1;
+    color: #bdc3c7;
+    cursor: not-allowed;
+    border-color: #ddd;
 }

@@ -3,59 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro de Presos</title>
+    <title>Sistema de Gerenciamento de Presos - Dr. Eryca</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h1>Sistema de Cadastro e Acompanhamento de Presos</h1>
+        <div class="header">
+            <img src="https://i.imgur.com/U5E4I0j.png" alt="Logo Advocacia" class="logo">
+            <h1>Sistema de Gerenciamento de Presos para a Dr. Eryca</h1>
+        </div>
+
 
         <form id="cadastroForm">
-            <h2>Cadastrar Novo Preso</h2>
+            <h2>Cadastrar ou Editar Preso</h2>
             <div class="form-grid">
-                <div class="form-group">
+                <input type="hidden" id="presoId"> <div class="form-group">
                     <label for="nome">Nome Completo:</label>
                     <input type="text" id="nome" required>
                 </div>
                 <div class="form-group">
-                    <label for="quemPrendeu">Quem Prendeu:</label>
-                    <input type="text" id="quemPrendeu" required>
+                    <label for="unidadePrisional">Unidade Prisional:</label>
+                    <select id="unidadePrisional" required>
+                        <option value="">Selecione...</option>
+                        <option value="Guajará">Guajará</option>
+                        <option value="Guaporé">Guaporé</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label for="quandoPrendeu">Quando Prendeu (Data):</label>
+                    <label for="quandoPrendeu">Data da Prisão:</label>
                     <input type="date" id="quandoPrendeu" required>
                 </div>
-                <div class="form-group">
-                    <label for="dataRevisao">Data para Revisão/Reversão:</label>
-                    <input type="date" id="dataRevisao">
+                 <div class="form-group">
+                    <label for="ultimaRevisao">Data da Última Revisão:</label>
+                    <input type="date" id="ultimaRevisao">
+                </div>
+                 <div class="form-group">
+                    <label for="reuPrimario">É Réu Primário?</label>
+                    <select id="reuPrimario" required>
+                        <option value="">Selecione...</option>
+                        <option value="Sim">Sim</option>
+                        <option value="Não">Não</option>
+                    </select>
+                </div>
+                 <div class="form-group">
+                    <label for="regimeProvavel">Regime Prisional Provável:</label>
+                    <select id="regimeProvavel" required>
+                        <option value="">Selecione...</option>
+                        <option value="Aberto">Aberto</option>
+                        <option value="Semiaberto">Semiaberto</option>
+                        <option value="Fechado">Fechado</option>
+                    </select>
                 </div>
                 <div class="form-group full-width">
                     <label for="observacao">Observação Geral:</label>
                     <textarea id="observacao" rows="3"></textarea>
                 </div>
-                 <div class="form-group">
-                    <label for="motivoPrisao">Motivo da Prisão/Artigo(s):</label>
-                    <input type="text" id="motivoPrisao">
-                </div>
-                <div class="form-group">
-                    <label for="localDetencao">Local da Detenção Atual:</label>
-                    <input type="text" id="localDetencao">
-                </div>
             </div>
-            <button type="submit">Cadastrar Preso</button>
+            <button type="submit" id="btnSalvar">Salvar Registro</button>
+            <button type="button" id="btnCancelarEdicao" class="hidden">Cancelar Edição</button>
         </form>
 
         <hr>
 
-        <h2>Presos Cadastrados</h2>
-        <div class="filtros">
-            <label for="filtroNome">Filtrar por Nome:</label>
-            <input type="text" id="filtroNome" placeholder="Digite para filtrar...">
+        <h2>Lista de Presos</h2>
+        <div class="filtros-container">
+            <input type="text" id="filtroNome" placeholder="Filtrar por nome...">
+            <select id="filtroLocal">
+                <option value="">Todas Unidades</option>
+                <option value="Guajará">Guajará</option>
+                <option value="Guaporé">Guaporé</option>
+            </select>
+            <select id="filtroCor">
+                <option value="">Todas Cores</option>
+                <option value="Amarelo">Amarelo (0-30d)</option>
+                <option value="Laranja">Laranja (31-90d)</option>
+                <option value="Vermelho">Vermelho (91+d)</option>
+            </select>
+            <select id="filtroRegime">
+                <option value="">Todos Regimes</option>
+                <option value="Aberto">Aberto</option>
+                <option value="Semiaberto">Semiaberto</option>
+                <option value="Fechado">Fechado</option>
+            </select>
+            <input type="date" id="filtroDataInicio" title="Data de prisão inicial">
+            <input type="date" id="filtroDataFim" title="Data de prisão final">
+            <button id="btnLimparFiltros">Limpar Filtros</button>
         </div>
-        <div id="listaPresos" class="lista-presos-container">
-            </div>
+        <div class="table-wrapper">
+             <table>
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Nome</th>
+                        <th>Dias Preso</th>
+                        <th>Unidade Prisional</th>
+                        <th>Data da Prisão</th>
+                        <th>Regime Provável</th>
+                        <th>Réu Primário?</th>
+                        <th>Última Revisão</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaPresosBody">
+                    </tbody>
+            </table>
+        </div>
+        <p id="contadorRegistros">Mostrando 0 registros.</p>
+
+        <div id="paginacaoContainer" class="paginacao-container"></div>
     </div>
 
-    <audio id="alertaSonoroCurto" src="alert_short.mp3" preload="auto"></audio> <audio id="alertaSonoroLongo" src="alert_long.mp3" preload="auto"></audio> <script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
