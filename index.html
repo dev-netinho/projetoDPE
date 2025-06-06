@@ -3,116 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gerenciamento de Presos - Dr. Eryca</title>
+    <title>Painel de Gestão - Dr. Eryca</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <img src="assets/Logo_DPE_dark_h_308px.webp" alt="Logo Advocacia" class="logo">
-            <h1>Sistema de Gerenciamento de Presos para a Dr. Eryca</h1>
-        </div>
 
-
-        <form id="cadastroForm">
-            <h2>Cadastrar ou Editar Preso</h2>
-            <div class="form-grid">
-                <input type="hidden" id="presoId"> <div class="form-group">
-                    <label for="nome">Nome Completo:</label>
-                    <input type="text" id="nome" required>
-                </div>
-                <div class="form-group">
-                    <label for="unidadePrisional">Unidade Prisional:</label>
-                    <select id="unidadePrisional" required>
-                        <option value="">Selecione...</option>
-                        <option value="Guajará">Guajará</option>
-                        <option value="Guaporé">Guaporé</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="quandoPrendeu">Data da Prisão:</label>
-                    <input type="date" id="quandoPrendeu" required>
-                </div>
-                 <div class="form-group">
-                    <label for="ultimaRevisao">Data da Última Revisão:</label>
-                    <input type="date" id="ultimaRevisao">
-                </div>
-                 <div class="form-group">
-                    <label for="reuPrimario">É Réu Primário?</label>
-                    <select id="reuPrimario" required>
-                        <option value="">Selecione...</option>
-                        <option value="Sim">Sim</option>
-                        <option value="Não">Não</option>
-                    </select>
-                </div>
-                 <div class="form-group">
-                    <label for="regimeProvavel">Regime Prisional Provável:</label>
-                    <select id="regimeProvavel" required>
-                        <option value="">Selecione...</option>
-                        <option value="Aberto">Aberto</option>
-                        <option value="Semiaberto">Semiaberto</option>
-                        <option value="Fechado">Fechado</option>
-                    </select>
-                </div>
-                <div class="form-group full-width">
-                    <label for="observacao">Observação Geral:</label>
-                    <textarea id="observacao" rows="3"></textarea>
-                </div>
+    <header class="main-header">
+        <div class="header-content">
+            <div class="logo-container">
+                <img src="assets/Logo_DPE_dark_h_308px.webp" alt="Logo Advocacia" class="logo">
+                <span>Painel de Gestão</span>
             </div>
-            <button type="submit" id="btnSalvar">Salvar Registro</button>
-            <button type="button" id="btnCancelarEdicao" class="hidden">Cancelar Edição</button>
-        </form>
-
-        <hr>
-
-        <h2>Lista de Presos</h2>
-        <div class="filtros-container">
-            <input type="text" id="filtroNome" placeholder="Filtrar por nome...">
-            <select id="filtroLocal">
-                <option value="">Todas Unidades</option>
-                <option value="Guajará">Guajará</option>
-                <option value="Guaporé">Guaporé</option>
-            </select>
-            <select id="filtroCor">
-                <option value="">Todas Cores</option>
-                <option value="Amarelo">Amarelo (0-30d)</option>
-                <option value="Laranja">Laranja (31-90d)</option>
-                <option value="Vermelho">Vermelho (91+d)</option>
-            </select>
-            <select id="filtroRegime">
-                <option value="">Todos Regimes</option>
-                <option value="Aberto">Aberto</option>
-                <option value="Semiaberto">Semiaberto</option>
-                <option value="Fechado">Fechado</option>
-            </select>
-            <input type="date" id="filtroDataInicio" title="Data de prisão inicial">
-            <input type="date" id="filtroDataFim" title="Data de prisão final">
-            <button id="btnLimparFiltros">Limpar Filtros</button>
+            <button id="btnAdicionarNovo" class="btn btn-primary"><i class="fas fa-plus"></i> Adicionar Preso</button>
         </div>
-        <div class="table-wrapper">
-             <table>
-                <thead>
-                    <tr>
-                        <th>Status</th>
-                        <th>Nome</th>
-                        <th>Dias Preso</th>
-                        <th>Unidade Prisional</th>
-                        <th>Data da Prisão</th>
-                        <th>Regime Provável</th>
-                        <th>Réu Primário?</th>
-                        <th>Última Revisão</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="tabelaPresosBody">
-                    </tbody>
-            </table>
-        </div>
-        <p id="contadorRegistros">Mostrando 0 registros.</p>
+    </header>
 
-        <div id="paginacaoContainer" class="paginacao-container"></div>
+    <main class="container">
+        <div class="card filtros-card">
+            <div class="card-header">
+                <h3><i class="fas fa-filter"></i> Filtros</h3>
+                <button id="btnLimparFiltros" class="btn btn-secondary btn-sm"><i class="fas fa-eraser"></i> Limpar</button>
+            </div>
+            <div class="card-body filtros-container">
+                <input type="text" id="filtroNome" placeholder="Buscar por nome...">
+                <select id="filtroLocal"><option value="">Unidade Prisional</option><option value="Guajará">Guajará</option><option value="Guaporé">Guaporé</option></select>
+                <select id="filtroCor"><option value="">Status (Cor)</option><option value="Amarelo">Amarelo (0-30d)</option><option value="Laranja">Laranja (31-90d)</option><option value="Vermelho">Vermelho (91+d)</option></select>
+                <select id="filtroRegime"><option value="">Regime Provável</option><option value="Aberto">Aberto</option><option value="Semiaberto">Semiaberto</option><option value="Fechado">Fechado</option></select>
+                <input type="date" id="filtroDataInicio" title="Data de prisão inicial">
+                <input type="date" id="filtroDataFim" title="Data de prisão final">
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 id="contadorRegistros"></h3>
+            </div>
+            <div class="card-body table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Nome</th>
+                            <th>Dias Preso</th>
+                            <th>Unidade</th>
+                            <th>Data da Prisão</th>
+                            <th>Regime</th>
+                            <th>Primário?</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaPresosBody"></tbody>
+                </table>
+            </div>
+             <div id="paginacaoContainer" class="paginacao-container"></div>
+        </div>
+    </main>
+    
+    <div id="modal" class="modal-container hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Adicionar Novo Preso</h2>
+                <button id="closeModalBtn" class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="cadastroForm">
+                <input type="hidden" id="presoId">
+                <div class="form-grid">
+                    <div class="form-group"><label for="nome">Nome Completo</label><input type="text" id="nome" required></div>
+                    <div class="form-group"><label for="unidadePrisional">Unidade Prisional</label><select id="unidadePrisional" required><option value="">Selecione...</option><option value="Guajará">Guajará</option><option value="Guaporé">Guaporé</option></select></div>
+                    <div class="form-group"><label for="quandoPrendeu">Data da Prisão</label><input type="date" id="quandoPrendeu" required></div>
+                    <div class="form-group"><label for="ultimaRevisao">Data da Última Revisão</label><input type="date" id="ultimaRevisao"></div>
+                    <div class="form-group"><label for="reuPrimario">É Réu Primário?</label><select id="reuPrimario" required><option value="">Selecione...</option><option value="Sim">Sim</option><option value="Não">Não</option></select></div>
+                    <div class="form-group"><label for="regimeProvavel">Regime Provável</label><select id="regimeProvavel" required><option value="">Selecione...</option><option value="Aberto">Aberto</option><option value="Semiaberto">Semiaberto</option><option value="Fechado">Fechado</option></select></div>
+                    <div class="form-group full-width"><label for="observacao">Observação Geral</label><textarea id="observacao" rows="4"></textarea></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="btnCancelarModal" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" id="btnSalvar" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
     </div>
-
+    
+    <div id="toastContainer"></div>
+    
     <script src="script.js"></script>
 </body>
 </html>
