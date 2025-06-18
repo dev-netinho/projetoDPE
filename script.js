@@ -1,3 +1,15 @@
+// Bloco de Auto-Execução para proteger a página
+// Ele roda imediatamente ao carregar o script.
+(() => {
+    const token = localStorage.getItem('authToken');
+    // Se NÃO houver token, o usuário não está logado.
+    // Redirecionamos imediatamente para a página de login.
+    if (!token) {
+        window.location.href = 'login.html';
+    }
+})();
+
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- REFERÊNCIAS DO DOM ---
     const tabelaBody = document.getElementById('tabelaPresosBody');
@@ -12,8 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
         dataInicio: document.getElementById('filtroDataInicio'),
         dataFim: document.getElementById('filtroDataFim'),
     };
-    
-    // Modal
     const modal = document.getElementById('modal');
     const form = document.getElementById('cadastroForm');
     const modalTitle = document.getElementById('modalTitle');
@@ -22,10 +32,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCancelarModal = document.getElementById('btnCancelarModal');
     const presoIdInput = document.getElementById('presoId');
     const toastContainer = document.getElementById('toastContainer');
+    const btnLogout = document.getElementById('btnLogout');
+    const userNameSpan = document.getElementById('userName');
 
     // --- ESTADO DA APLICAÇÃO ---
-    const API_URL = 'https://painel-advocacia-api-netinho.onrender.com/api'; // O endereço do nosso back-end!
-    let todosPresos = []; // Array para guardar todos os registros do banco
+    const API_URL = 'https://painel-advocacia-api-netinho.onrender.com/api';
+    const TOKEN = localStorage.getItem('authToken');
+    let todosPresos = []; 
     let currentPage = 1;
     const rowsPerPage = 15;
     const dataAtual = new Date();
@@ -34,49 +47,79 @@ document.addEventListener('DOMContentLoaded', () => {
     const calcularDiasPreso = (data) => data ? Math.max(0, Math.ceil((dataAtual - new Date(data)) / (1000 * 60 * 60 * 24))) : 0;
     const getStatusCor = (dias) => (dias <= 30) ? 'Amarelo' : (dias <= 90) ? 'Laranja' : 'Vermelho';
 
-    // --- LÓGICA DE INTERAÇÃO COM API ---
+    // --- FUNÇÕES DE API COM TOKEN ---
+    const fetchApi = async (endpoint, options = {}) => {
+        const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${TOKEN}`
+        };
+
+        const config = {
+            ...options,
+            headers: { ...headers, ...options.headers },
+        };
+
+        const response = await fetch(`${API_URL}${endpoint}`, config);
+
+        if (response.status === 401 || response.status === 403) {
+            localStorage.clear(); // Limpa tudo
+            window.location.href = 'login.html';
+            throw new Error('Token inválido ou expirado. Por favor, faça o login novamente.');
+        }
+
+        if (response.status === 204) {
+            return null;
+        }
+
+        const responseData = await response.json();
+
+        if (!response.ok) {
+            throw new Error(responseData.error || 'Ocorreu um erro na requisição.');
+        }
+
+        return responseData;
+    };
+
     const buscarDados = async () => {
         try {
-            const response = await fetch(`${API_URL}/presos`);
-            if (!response.ok) throw new Error('Erro ao buscar dados da API');
-            todosPresos = await response.json();
+            todosPresos = await fetchApi('/presos');
             aplicarFiltros();
         } catch (error) {
             console.error(error);
-            showToast('Falha ao carregar dados. Verifique se o servidor back-end está rodando.', 'error');
+            showToast(error.message, 'error');
         }
     };
-
+    
     // --- LÓGICA DO MODAL ---
     const openModal = (isEdit = false, preso = null) => {
         form.reset();
+        presoIdInput.value = ''; // Limpa o ID
         if (isEdit && preso) {
             modalTitle.textContent = 'Editar Registro';
-            // Preenche os campos do formulário com os dados do preso
-            // O 'id' e os outros campos serão preenchidos pelo seu 'name' correspondente
+            presoIdInput.value = preso.id;
             Object.keys(preso).forEach(key => {
                 const input = form.querySelector(`[name=${key}]`);
-                if (input) input.value = preso[key];
+                if (input) {
+                    // Formata a data para o formato YYYY-MM-DD para campos de data
+                    if (input.type === 'date' && preso[key]) {
+                        input.value = new Date(preso[key]).toISOString().split('T')[0];
+                    } else {
+                        input.value = preso[key];
+                    }
+                }
             });
         } else {
             modalTitle.textContent = 'Adicionar Novo Preso';
-            presoIdInput.value = '';
         }
         modal.classList.remove('hidden');
     };
     const closeModal = () => modal.classList.add('hidden');
-    btnAdicionarNovo.addEventListener('click', () => openModal());
-    closeModalBtn.addEventListener('click', closeModal);
-    btnCancelarModal.addEventListener('click', closeModal);
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeModal();
-    });
 
     // --- LÓGICA DE NOTIFICAÇÕES (TOASTS) ---
     const showToast = (message, type = 'success') => {
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
-        toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
+        toast.innerHTML = `<i class="fas fa-${"success"===type?"check-circle":"exclamation-circle"}"></i> ${message}`;
         toastContainer.appendChild(toast);
         setTimeout(() => toast.remove(), 3000);
     };
@@ -124,61 +167,36 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             return btn;
         };
-        paginacaoContainer.appendChild(createButton('<i class="fas fa-angle-left"></i>', currentPage - 1, currentPage === 1));
-        for (let i = 1; i <= pageCount; i++) {
-            const btn = createButton(i, i);
-            if (i === currentPage) btn.classList.add('active');
-            paginacaoContainer.appendChild(btn);
-        }
-        paginacaoContainer.appendChild(createButton('<i class="fas fa-angle-right"></i>', currentPage + 1, currentPage === pageCount));
+        o.appendChild(n('<i class="fas fa-angle-left"></i>',v-1,1===v));for(let t=1;t<=pageCount;t++){const a=n(t,t);t===v&&a.classList.add("active"),o.appendChild(a)}o.appendChild(n('<i class="fas fa-angle-right"></i>',v+1,v===pageCount));
     };
 
-    // --- CRUD E FILTROS COM API ---
+    // --- CRUD E FILTROS ---
     form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const id = presoIdInput.value;
-    const dadosForm = new FormData(form);
-    const dadosPreso = Object.fromEntries(dadosForm.entries());
-    
-    // --- LINHA DE CORREÇÃO ADICIONADA AQUI ---
-    // Se não há um 'id' (ou seja, estamos criando um novo preso),
-    // removemos a propriedade 'id' para que o banco de dados a gere automaticamente.
-    if (!id) {
-        delete dadosPreso.id;
-    }
-    
-    // Remove valores vazios para não enviar 'null' para campos opcionais como data de revisão
-    if (!dadosPreso.ultima_revisao) delete dadosPreso.ultima_revisao;
-    
-    try {
-        let response;
-        let url = `${API_URL}/presos`;
-        let method = 'POST';
+        e.preventDefault();
+        const id = presoIdInput.value;
+        const dadosForm = new FormData(form);
+        const dadosPreso = Object.fromEntries(dadosForm.entries());
+        
+        if (!dadosPreso.ultima_revisao) delete dadosPreso.ultima_revisao;
+        if (id) delete dadosPreso.id;
 
-        if (id) {
-            url = `${API_URL}/presos/${id}`;
-            method = 'PUT';
+        try {
+            const endpoint = id ? `/presos/${id}` : '/presos';
+            const method = id ? 'PUT' : 'POST';
+
+            await fetchApi(endpoint, {
+                method: method,
+                body: JSON.stringify(dadosPreso)
+            });
+            
+            showToast(id ? 'Registro atualizado com sucesso!' : 'Novo preso cadastrado com sucesso!');
+            closeModal();
+            buscarDados();
+        } catch (error) {
+            console.error(error);
+            showToast(error.message, 'error');
         }
-        
-        response = await fetch(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(dadosPreso)
-        });
-        
-        if (!response.ok) {
-            const err = await response.json();
-            throw new Error(err.error || 'Falha ao salvar registro.');
-        }
-        
-        showToast(id ? 'Registro atualizado com sucesso!' : 'Novo preso cadastrado com sucesso!');
-        closeModal();
-        buscarDados(); // Recarrega os dados do banco
-    } catch (error) {
-        console.error(error);
-        showToast(error.message, 'error');
-    }
-});
+    });
 
     window.prepararEdicao = (id) => {
         const preso = todosPresos.find(p => p.id === id);
@@ -188,8 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.excluirPreso = async (id) => {
         if (confirm('Tem certeza que deseja excluir permanentemente este registro?')) {
             try {
-                const response = await fetch(`${API_URL}/presos/${id}`, { method: 'DELETE' });
-                if (!response.ok) throw new Error('Falha ao excluir registro.');
+                await fetchApi(`/presos/${id}`, { method: 'DELETE' });
                 showToast('Registro excluído.', 'error');
                 buscarDados();
             } catch (error) {
@@ -214,12 +231,33 @@ document.addEventListener('DOMContentLoaded', () => {
         renderizarTabela(presosFiltrados);
         return presosFiltrados;
     };
-    Object.values(filtros).forEach(f => f.addEventListener('input', () => aplicarFiltros()));
-    btnLimparFiltros.addEventListener('click', () => {
-        Object.values(filtros).forEach(f => f.value = '');
-        aplicarFiltros();
-    });
+    
+    const configurarLogout = () => {
+        btnLogout.addEventListener('click', () => {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        });
+    };
+
+    const exibirInfoUsuario = () => {
+        const userDataString = localStorage.getItem('userData');
+        if (userDataString) {
+            const userData = JSON.parse(userDataString);
+            userNameSpan.textContent = `Olá, ${userData.full_name || userData.email}`;
+        }
+    };
 
     // --- INICIALIZAÇÃO ---
-    buscarDados(); // A mágica começa aqui!
+    if (TOKEN) {
+        exibirInfoUsuario();
+        configurarLogout();
+        buscarDados();
+        
+        r.addEventListener("click",()=>openModal());
+        l.addEventListener("click",closeModal);
+        c.addEventListener("click",closeModal);
+        d.addEventListener("click",t=>{t.target===d&&closeModal()});
+        n.addEventListener("click",()=>{Object.values(a).forEach(t=>t.value=""),aplicarFiltros()});
+        Object.values(a).forEach(t=>t.addEventListener("input",()=>aplicarFiltros()));
+    }
 });

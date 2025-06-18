@@ -28,8 +28,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             // Se o login for bem-sucedido:
-            // 1. Salva o token no localStorage do navegador
+            // 1. Salva o token e os dados do usuário no localStorage
             localStorage.setItem('authToken', data.token);
+            localStorage.setItem('userData', JSON.stringify(data.user)); // Salva o objeto do usuário
 
             // 2. Redireciona para a página principal do painel
             window.location.href = 'index.html';

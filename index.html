@@ -11,17 +11,19 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <header class="main-header">
         <div class="header-content">
             <div class="logo-container">
                 <img src="https://i.imgur.com/U5E4I0j.png" alt="Logo Advocacia" class="logo">
                 <span>Painel de Gestão</span>
             </div>
-            <button id="btnAdicionarNovo" class="btn btn-primary"><i class="fas fa-plus"></i> <span>Adicionar Preso</span></button>
+            <div class="header-actions">
+                <span id="userName" class="user-name"></span>
+                <button id="btnAdicionarNovo" class="btn btn-primary"><i class="fas fa-plus"></i> <span>Adicionar Preso</span></button>
+                <button id="btnLogout" class="btn btn-secondary"><i class="fas fa-sign-out-alt"></i> <span>Sair</span></button>
+            </div>
         </div>
     </header>
-
     <main class="container">
         <div class="card filtros-card">
             <div class="card-header">
@@ -37,7 +39,6 @@
                 <input type="date" id="filtroDataFim" title="Data de prisão final">
             </div>
         </div>
-
         <div class="card">
             <div class="card-header">
                 <h3 id="contadorRegistros"></h3>
@@ -62,7 +63,6 @@
              <div id="paginacaoContainer" class="paginacao-container"></div>
         </div>
     </main>
-    
     <div id="modal" class="modal-container hidden">
         <div class="modal-content">
             <div class="modal-header">
@@ -87,9 +87,7 @@
             </form>
         </div>
     </div>
-    
     <div id="toastContainer"></div>
-
     <footer class="main-footer">
         <p>&copy; 2025 Painel de Gestão para Dr. Eryca. Todos os direitos reservados.</p>
         <p class="developer-credit">Desenvolvido com <i class="fas fa-heart"></i> por José Neto</p>
@@ -99,7 +97,6 @@
             <a href="https://www.instagram.com/eu.josenetosz/" target="_blank" rel="noopener noreferrer" title="Instagram"><i class="fab fa-instagram"></i></a>
         </div>
     </footer>
-    
     <script src="script.js"></script>
 </body>
 </html>
