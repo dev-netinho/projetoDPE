@@ -30,10 +30,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const userNameSpan = document.getElementById('userName');
     const btnExcluirSelecionados = document.getElementById('btnExcluirSelecionados');
     const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const btnGerarPDF = document.getElementById('btnGerarPDF');
 
     const API_URL = 'https://painel-advocacia-api-netinho.onrender.com/api';
     const TOKEN = localStorage.getItem('authToken');
-    let todosPresos = []; 
+    let todosPresos = [];
     let idsSelecionados = [];
     let currentPage = 1;
     const rowsPerPage = 15;
@@ -47,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${TOKEN}`
         };
-        const config = { ...options, headers: { ...headers, ...options.headers }};
+        const config = { ...options, headers: { ...headers, ...options.headers } };
         const response = await fetch(`${API_URL}${endpoint}`, config);
         if (response.status === 401 || response.status === 403) {
             localStorage.clear();
@@ -69,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast(error.message, 'error');
         }
     };
-    
+
     const openModal = (isEdit = false, preso = null) => {
         form.reset();
         presoIdInput.value = '';
@@ -94,11 +95,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const showToast = (message, type = 'success') => {
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
-        toast.innerHTML = `<i class="fas fa-${"success"===type?"check-circle":"exclamation-circle"}"></i> ${message}`;
+        toast.innerHTML = `<i class="fas fa-${"success" === type ? "check-circle" : "exclamation-circle"}"></i> ${message}`;
         toastContainer.appendChild(toast);
         setTimeout(() => toast.remove(), 3000);
     };
-    
+
     const renderizarTabela = (lista = todosPresos) => {
         tabelaBody.innerHTML = '';
         const start = (currentPage - 1) * rowsPerPage;
@@ -117,12 +118,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${preso.nome}</td>
                 <td>${diasPreso}</td>
                 <td>${preso.unidade_prisional}</td>
-                <td>${new Date(preso.quando_prendeu).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</td>
+                <td>${new Date(preso.quando_prendeu).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
                 <td>${preso.regime_provavel}</td>
                 <td>${preso.reu_primario}</td>
                 <td class="acoes-cell">
                     <button onclick="prepararEdicao('${preso.id}')" title="Editar"><i class="fas fa-edit"></i></button>
-                    <button onclick="excluirPreso('${preso.id}')" title="Excluir"><i class="fas fa-trash"></i></button>
+                    <button onclick="excluirPreso(${preso.id})" title="Excluir"><i class="fas fa-trash"></i></button>
                 </td>
             `;
             tabelaBody.appendChild(tr);
@@ -130,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.querySelectorAll('.preso-checkbox').forEach(checkbox => {
             checkbox.addEventListener('click', (e) => {
-                e.stopPropagation(); 
+                e.stopPropagation();
                 const id = parseInt(e.target.value);
                 const tr = e.target.closest('tr');
                 if (e.target.checked) {
@@ -143,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 atualizarInterfaceExclusao();
             });
         });
-        
+
         contadorRegistros.innerHTML = `<i class="fas fa-list-ul"></i> Mostrando ${paginatedItems.length} de ${lista.length} registros`;
         setupPaginacao(lista);
         atualizarInterfaceExclusao();
@@ -174,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const aplicarFiltros = (resetPage = true) => {
-        if(resetPage) currentPage = 1;
+        if (resetPage) currentPage = 1;
         let presosFiltrados = [...todosPresos];
         const nomeTermo = filtros.nome.value.toLowerCase();
         if (nomeTermo) presosFiltrados = presosFiltrados.filter(p => p.nome.toLowerCase().includes(nomeTermo));
@@ -188,16 +189,50 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const atualizarInterfaceExclusao = () => {
+        const btnText = btnExcluirSelecionados.querySelector('i').nextSibling;
         if (idsSelecionados.length > 0) {
             btnExcluirSelecionados.classList.remove('hidden');
-            btnExcluirSelecionados.querySelector('i').nextSibling.textContent = ` Excluir ${idsSelecionados.length} Selecionados`;
+            btnText.textContent = ` Excluir ${idsSelecionados.length}`;
         } else {
             btnExcluirSelecionados.classList.add('hidden');
         }
-        const todosVisiveis = document.querySelectorAll('.preso-checkbox');
-        selectAllCheckbox.checked = todosVisiveis.length > 0 && Array.from(todosVisiveis).every(cb => cb.checked);
+        const todosVisiveisNaPagina = document.querySelectorAll('.preso-checkbox');
+        const todosMarcados = todosVisiveisNaPagina.length > 0 && Array.from(todosVisiveisNaPagina).every(cb => cb.checked);
+        selectAllCheckbox.checked = todosMarcados;
     };
 
+    const gerarPDF = () => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        const dadosFiltrados = aplicarFiltros(false);
+        const corpoTabela = dadosFiltrados.map(p => [
+            p.nome,
+            calcularDiasPreso(p.quando_prendeu),
+            p.unidade_prisional,
+            new Date(p.quando_prendeu).toLocaleDateString('pt-BR'),
+            p.regime_provavel,
+            p.reu_primario
+        ]);
+        const cabecalhoTabela = ["Nome", "Dias Preso", "Unidade", "Data Prisão", "Regime Provável", "Primário?"];
+
+        doc.setFontSize(18);
+        doc.text("Relatório de Clientes", 14, 22);
+        doc.setFontSize(11);
+        doc.setTextColor(100);
+        doc.text(`Relatório gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 14, 29);
+        
+        doc.autoTable({
+            head: [cabecalhoTabela],
+            body: corpoTabela,
+            startY: 35,
+            theme: 'grid',
+            headStyles: { fillColor: [0, 95, 115] },
+        });
+
+        doc.save(`relatorio_clientes_${new Date().getTime()}.pdf`);
+    };
+    
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = presoIdInput.value;
@@ -220,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.prepararEdicao = (id) => {
-        const preso = todosPresos.find(p => p.id.toString() === id);
+        const preso = todosPresos.find(p => p.id.toString() === id.toString());
         if (preso) openModal(true, preso);
     };
     
@@ -242,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (confirm(`Tem certeza que deseja excluir permanentemente os ${idsSelecionados.length} registros selecionados?`)) {
             try {
                 await fetchApi('/presos', { method: 'DELETE', body: JSON.stringify({ ids: idsSelecionados }) });
-                showToast(`${idsSelecionados.length} registros excluídos com sucesso.`, 'error');
+                showToast(`${idsSelecionados.length} registros excluídos.`, 'error');
                 idsSelecionados = [];
                 buscarDados();
             } catch (error) {
@@ -253,17 +288,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     selectAllCheckbox.addEventListener('click', () => {
-        const checkboxes = document.querySelectorAll('.preso-checkbox');
-        checkboxes.forEach(checkbox => {
+        const checkboxesVisiveis = document.querySelectorAll('.preso-checkbox');
+        checkboxesVisiveis.forEach(checkbox => {
+            checkbox.checked = selectAllCheckbox.checked;
             const id = parseInt(checkbox.value);
             const tr = checkbox.closest('tr');
+
             if (selectAllCheckbox.checked) {
                 if (!idsSelecionados.includes(id)) idsSelecionados.push(id);
-                checkbox.checked = true;
                 tr.classList.add('selecionada');
             } else {
-                idsSelecionados = [];
-                checkbox.checked = false;
+                idsSelecionados = idsSelecionados.filter(selId => selId !== id);
                 tr.classList.remove('selecionada');
             }
         });
@@ -295,5 +330,6 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.addEventListener("click", e => { if (e.target === modal) closeModal() });
         btnLimparFiltros.addEventListener("click", () => { Object.values(filtros).forEach(f => f.value = ""); aplicarFiltros() });
         Object.values(filtros).forEach(f => f.addEventListener("input", () => aplicarFiltros()));
+        btnGerarPDF.addEventListener('click', gerarPDF);
     }
 });

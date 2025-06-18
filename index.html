@@ -42,7 +42,10 @@
         <div class="card">
             <div class="card-header">
                 <h3 id="contadorRegistros"></h3>
-                <button id="btnExcluirSelecionados" class="btn btn-danger btn-sm hidden"><i class="fas fa-trash-alt"></i> Excluir Selecionados</button>
+                <div class="actions-group">
+                    <button id="btnGerarPDF" class="btn btn-secondary btn-sm"><i class="fas fa-file-pdf"></i> Gerar PDF</button>
+                    <button id="btnExcluirSelecionados" class="btn btn-danger btn-sm hidden"><i class="fas fa-trash-alt"></i> Excluir Selecionados</button>
+                </div>
             </div>
             <div class="card-body table-wrapper">
                 <table>
@@ -99,6 +102,9 @@
             <a href="https://www.instagram.com/eu.josenetosz/" target="_blank" rel="noopener noreferrer" title="Instagram"><i class="fab fa-instagram"></i></a>
         </div>
     </footer>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
