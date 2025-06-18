@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const cabecalhoTabela = ["Nome", "Dias Preso", "Unidade", "Data Prisão", "Regime Provável", "Primário?"];
 
         doc.setFontSize(18);
-        doc.text("Relatório de Clientes", 14, 22);
+        doc.text("Relatório de Detentos", 14, 22);
         doc.setFontSize(11);
         doc.setTextColor(100);
         doc.text(`Relatório gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 14, 29);
