@@ -1,17 +1,11 @@
-// Bloco de Auto-Execução para proteger a página
-// Ele roda imediatamente ao carregar o script.
 (() => {
     const token = localStorage.getItem('authToken');
-    // Se NÃO houver token, o usuário não está logado.
-    // Redirecionamos imediatamente para a página de login.
     if (!token) {
         window.location.href = 'login.html';
     }
 })();
 
-
 document.addEventListener('DOMContentLoaded', () => {
-    // --- REFERÊNCIAS DO DOM ---
     const tabelaBody = document.getElementById('tabelaPresosBody');
     const contadorRegistros = document.getElementById('contadorRegistros');
     const paginacaoContainer = document.getElementById('paginacaoContainer');
@@ -34,49 +28,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const toastContainer = document.getElementById('toastContainer');
     const btnLogout = document.getElementById('btnLogout');
     const userNameSpan = document.getElementById('userName');
+    const btnExcluirSelecionados = document.getElementById('btnExcluirSelecionados');
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
 
-    // --- ESTADO DA APLICAÇÃO ---
     const API_URL = 'https://painel-advocacia-api-netinho.onrender.com/api';
     const TOKEN = localStorage.getItem('authToken');
     let todosPresos = []; 
+    let idsSelecionados = [];
     let currentPage = 1;
     const rowsPerPage = 15;
     const dataAtual = new Date();
 
-    // --- FUNÇÕES DE LÓGICA DE NEGÓCIO (CÁLCULOS) ---
     const calcularDiasPreso = (data) => data ? Math.max(0, Math.ceil((dataAtual - new Date(data)) / (1000 * 60 * 60 * 24))) : 0;
     const getStatusCor = (dias) => (dias <= 30) ? 'Amarelo' : (dias <= 90) ? 'Laranja' : 'Vermelho';
 
-    // --- FUNÇÕES DE API COM TOKEN ---
     const fetchApi = async (endpoint, options = {}) => {
         const headers = {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${TOKEN}`
         };
-
-        const config = {
-            ...options,
-            headers: { ...headers, ...options.headers },
-        };
-
+        const config = { ...options, headers: { ...headers, ...options.headers }};
         const response = await fetch(`${API_URL}${endpoint}`, config);
-
         if (response.status === 401 || response.status === 403) {
-            localStorage.clear(); // Limpa tudo
+            localStorage.clear();
             window.location.href = 'login.html';
             throw new Error('Token inválido ou expirado. Por favor, faça o login novamente.');
         }
-
-        if (response.status === 204) {
-            return null;
-        }
-
+        if (response.status === 204) return null;
         const responseData = await response.json();
-
-        if (!response.ok) {
-            throw new Error(responseData.error || 'Ocorreu um erro na requisição.');
-        }
-
+        if (!response.ok) throw new Error(responseData.error || 'Ocorreu um erro na requisição.');
         return responseData;
     };
 
@@ -90,17 +70,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    // --- LÓGICA DO MODAL ---
     const openModal = (isEdit = false, preso = null) => {
         form.reset();
-        presoIdInput.value = ''; // Limpa o ID
+        presoIdInput.value = '';
+        modalTitle.textContent = isEdit ? 'Editar Registro' : 'Adicionar Novo Preso';
         if (isEdit && preso) {
-            modalTitle.textContent = 'Editar Registro';
             presoIdInput.value = preso.id;
             Object.keys(preso).forEach(key => {
                 const input = form.querySelector(`[name=${key}]`);
                 if (input) {
-                    // Formata a data para o formato YYYY-MM-DD para campos de data
                     if (input.type === 'date' && preso[key]) {
                         input.value = new Date(preso[key]).toISOString().split('T')[0];
                     } else {
@@ -108,14 +86,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             });
-        } else {
-            modalTitle.textContent = 'Adicionar Novo Preso';
         }
         modal.classList.remove('hidden');
     };
     const closeModal = () => modal.classList.add('hidden');
 
-    // --- LÓGICA DE NOTIFICAÇÕES (TOASTS) ---
     const showToast = (message, type = 'success') => {
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
@@ -124,32 +99,54 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => toast.remove(), 3000);
     };
     
-    // --- RENDERIZAÇÃO E PAGINAÇÃO ---
     const renderizarTabela = (lista = todosPresos) => {
         tabelaBody.innerHTML = '';
         const start = (currentPage - 1) * rowsPerPage;
         const paginatedItems = lista.slice(start, start + rowsPerPage);
+
         paginatedItems.forEach(preso => {
             const diasPreso = calcularDiasPreso(preso.quando_prendeu);
             const statusCor = getStatusCor(diasPreso).toLowerCase();
-            tabelaBody.innerHTML += `
-                <tr>
-                    <td><span class="status-dot alerta-${statusCor}" title="${statusCor.charAt(0).toUpperCase() + statusCor.slice(1)}"></span></td>
-                    <td>${preso.nome}</td>
-                    <td>${diasPreso}</td>
-                    <td>${preso.unidade_prisional}</td>
-                    <td>${new Date(preso.quando_prendeu).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</td>
-                    <td>${preso.regime_provavel}</td>
-                    <td>${preso.reu_primario}</td>
-                    <td class="acoes-cell">
-                        <button onclick="prepararEdicao('${preso.id}')" title="Editar"><i class="fas fa-edit"></i></button>
-                        <button onclick="excluirPreso('${preso.id}')" title="Excluir"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
+            const isChecked = idsSelecionados.includes(preso.id);
+            const tr = document.createElement('tr');
+            if (isChecked) tr.classList.add('selecionada');
+
+            tr.innerHTML = `
+                <td><input type="checkbox" class="preso-checkbox" value="${preso.id}" ${isChecked ? 'checked' : ''}></td>
+                <td><span class="status-dot alerta-${statusCor}" title="${statusCor.charAt(0).toUpperCase() + statusCor.slice(1)}"></span></td>
+                <td>${preso.nome}</td>
+                <td>${diasPreso}</td>
+                <td>${preso.unidade_prisional}</td>
+                <td>${new Date(preso.quando_prendeu).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</td>
+                <td>${preso.regime_provavel}</td>
+                <td>${preso.reu_primario}</td>
+                <td class="acoes-cell">
+                    <button onclick="prepararEdicao('${preso.id}')" title="Editar"><i class="fas fa-edit"></i></button>
+                    <button onclick="excluirPreso('${preso.id}')" title="Excluir"><i class="fas fa-trash"></i></button>
+                </td>
             `;
+            tabelaBody.appendChild(tr);
         });
+
+        document.querySelectorAll('.preso-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('click', (e) => {
+                e.stopPropagation(); 
+                const id = parseInt(e.target.value);
+                const tr = e.target.closest('tr');
+                if (e.target.checked) {
+                    if (!idsSelecionados.includes(id)) idsSelecionados.push(id);
+                    tr.classList.add('selecionada');
+                } else {
+                    idsSelecionados = idsSelecionados.filter(selId => selId !== id);
+                    tr.classList.remove('selecionada');
+                }
+                atualizarInterfaceExclusao();
+            });
+        });
+        
         contadorRegistros.innerHTML = `<i class="fas fa-list-ul"></i> Mostrando ${paginatedItems.length} de ${lista.length} registros`;
         setupPaginacao(lista);
+        atualizarInterfaceExclusao();
     };
 
     const setupPaginacao = (items) => {
@@ -167,28 +164,52 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             return btn;
         };
-        o.appendChild(n('<i class="fas fa-angle-left"></i>',v-1,1===v));for(let t=1;t<=pageCount;t++){const a=n(t,t);t===v&&a.classList.add("active"),o.appendChild(a)}o.appendChild(n('<i class="fas fa-angle-right"></i>',v+1,v===pageCount));
+        paginacaoContainer.appendChild(createButton('<i class="fas fa-angle-left"></i>', currentPage - 1, currentPage === 1));
+        for (let i = 1; i <= pageCount; i++) {
+            const btn = createButton(i, i);
+            if (i === currentPage) btn.classList.add('active');
+            paginacaoContainer.appendChild(btn);
+        }
+        paginacaoContainer.appendChild(createButton('<i class="fas fa-angle-right"></i>', currentPage + 1, currentPage === pageCount));
     };
 
-    // --- CRUD E FILTROS ---
+    const aplicarFiltros = (resetPage = true) => {
+        if(resetPage) currentPage = 1;
+        let presosFiltrados = [...todosPresos];
+        const nomeTermo = filtros.nome.value.toLowerCase();
+        if (nomeTermo) presosFiltrados = presosFiltrados.filter(p => p.nome.toLowerCase().includes(nomeTermo));
+        if (filtros.local.value) presosFiltrados = presosFiltrados.filter(p => p.unidade_prisional === filtros.local.value);
+        if (filtros.regime.value) presosFiltrados = presosFiltrados.filter(p => p.regime_provavel === filtros.regime.value);
+        if (filtros.cor.value) presosFiltrados = presosFiltrados.filter(p => getStatusCor(calcularDiasPreso(p.quando_prendeu)) === filtros.cor.value);
+        if (filtros.dataInicio.value) presosFiltrados = presosFiltrados.filter(p => p.quando_prendeu >= filtros.dataInicio.value);
+        if (filtros.dataFim.value) presosFiltrados = presosFiltrados.filter(p => p.quando_prendeu <= filtros.dataFim.value);
+        renderizarTabela(presosFiltrados);
+        return presosFiltrados;
+    };
+
+    const atualizarInterfaceExclusao = () => {
+        if (idsSelecionados.length > 0) {
+            btnExcluirSelecionados.classList.remove('hidden');
+            btnExcluirSelecionados.querySelector('i').nextSibling.textContent = ` Excluir ${idsSelecionados.length} Selecionados`;
+        } else {
+            btnExcluirSelecionados.classList.add('hidden');
+        }
+        const todosVisiveis = document.querySelectorAll('.preso-checkbox');
+        selectAllCheckbox.checked = todosVisiveis.length > 0 && Array.from(todosVisiveis).every(cb => cb.checked);
+    };
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = presoIdInput.value;
         const dadosForm = new FormData(form);
         const dadosPreso = Object.fromEntries(dadosForm.entries());
-        
+        if (!id) delete dadosPreso.id;
         if (!dadosPreso.ultima_revisao) delete dadosPreso.ultima_revisao;
-        if (id) delete dadosPreso.id;
 
         try {
             const endpoint = id ? `/presos/${id}` : '/presos';
             const method = id ? 'PUT' : 'POST';
-
-            await fetchApi(endpoint, {
-                method: method,
-                body: JSON.stringify(dadosPreso)
-            });
-            
+            await fetchApi(endpoint, { method, body: JSON.stringify(dadosPreso) });
             showToast(id ? 'Registro atualizado com sucesso!' : 'Novo preso cadastrado com sucesso!');
             closeModal();
             buscarDados();
@@ -199,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.prepararEdicao = (id) => {
-        const preso = todosPresos.find(p => p.id === id);
+        const preso = todosPresos.find(p => p.id.toString() === id);
         if (preso) openModal(true, preso);
     };
     
@@ -216,22 +237,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    const aplicarFiltros = (resetPage = true) => {
-        if(resetPage) currentPage = 1;
-        let presosFiltrados = [...todosPresos];
-        
-        const nomeTermo = filtros.nome.value.toLowerCase();
-        if (nomeTermo) presosFiltrados = presosFiltrados.filter(p => p.nome.toLowerCase().includes(nomeTermo));
-        if (filtros.local.value) presosFiltrados = presosFiltrados.filter(p => p.unidade_prisional === filtros.local.value);
-        if (filtros.regime.value) presosFiltrados = presosFiltrados.filter(p => p.regime_provavel === filtros.regime.value);
-        if (filtros.cor.value) presosFiltrados = presosFiltrados.filter(p => getStatusCor(calcularDiasPreso(p.quando_prendeu)) === filtros.cor.value);
-        if (filtros.dataInicio.value) presosFiltrados = presosFiltrados.filter(p => p.quando_prendeu >= filtros.dataInicio.value);
-        if (filtros.dataFim.value) presosFiltrados = presosFiltrados.filter(p => p.quando_prendeu <= filtros.dataFim.value);
+    btnExcluirSelecionados.addEventListener('click', async () => {
+        if (idsSelecionados.length === 0) return;
+        if (confirm(`Tem certeza que deseja excluir permanentemente os ${idsSelecionados.length} registros selecionados?`)) {
+            try {
+                await fetchApi('/presos', { method: 'DELETE', body: JSON.stringify({ ids: idsSelecionados }) });
+                showToast(`${idsSelecionados.length} registros excluídos com sucesso.`, 'error');
+                idsSelecionados = [];
+                buscarDados();
+            } catch (error) {
+                console.error(error);
+                showToast(error.message, 'error');
+            }
+        }
+    });
 
-        renderizarTabela(presosFiltrados);
-        return presosFiltrados;
-    };
-    
+    selectAllCheckbox.addEventListener('click', () => {
+        const checkboxes = document.querySelectorAll('.preso-checkbox');
+        checkboxes.forEach(checkbox => {
+            const id = parseInt(checkbox.value);
+            const tr = checkbox.closest('tr');
+            if (selectAllCheckbox.checked) {
+                if (!idsSelecionados.includes(id)) idsSelecionados.push(id);
+                checkbox.checked = true;
+                tr.classList.add('selecionada');
+            } else {
+                idsSelecionados = [];
+                checkbox.checked = false;
+                tr.classList.remove('selecionada');
+            }
+        });
+        atualizarInterfaceExclusao();
+    });
+
     const configurarLogout = () => {
         btnLogout.addEventListener('click', () => {
             localStorage.clear();
@@ -247,17 +285,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- INICIALIZAÇÃO ---
     if (TOKEN) {
         exibirInfoUsuario();
         configurarLogout();
         buscarDados();
-        
-        r.addEventListener("click",()=>openModal());
-        l.addEventListener("click",closeModal);
-        c.addEventListener("click",closeModal);
-        d.addEventListener("click",t=>{t.target===d&&closeModal()});
-        n.addEventListener("click",()=>{Object.values(a).forEach(t=>t.value=""),aplicarFiltros()});
-        Object.values(a).forEach(t=>t.addEventListener("input",()=>aplicarFiltros()));
+        btnAdicionarNovo.addEventListener("click", () => openModal());
+        closeModalBtn.addEventListener("click", closeModal);
+        btnCancelarModal.addEventListener("click", closeModal);
+        modal.addEventListener("click", e => { if (e.target === modal) closeModal() });
+        btnLimparFiltros.addEventListener("click", () => { Object.values(filtros).forEach(f => f.value = ""); aplicarFiltros() });
+        Object.values(filtros).forEach(f => f.addEventListener("input", () => aplicarFiltros()));
     }
 });

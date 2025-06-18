@@ -42,11 +42,13 @@
         <div class="card">
             <div class="card-header">
                 <h3 id="contadorRegistros"></h3>
+                <button id="btnExcluirSelecionados" class="btn btn-danger btn-sm hidden"><i class="fas fa-trash-alt"></i> Excluir Selecionados</button>
             </div>
             <div class="card-body table-wrapper">
                 <table>
                     <thead>
                         <tr>
+                            <th><input type="checkbox" id="selectAllCheckbox" title="Selecionar Todos"></th>
                             <th>Status</th>
                             <th>Nome</th>
                             <th>Dias Preso</th>
