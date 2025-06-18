@@ -19,7 +19,7 @@
             </div>
             <div class="header-actions">
                 <span id="userName" class="user-name"></span>
-                <button id="btnAdicionarNovo" class="btn btn-primary"><i class="fas fa-plus"></i> <span>Adicionar Preso</span></button>
+                <button id="btnAdicionarNovo" class="btn btn-primary"><i class="fas fa-plus"></i> <span>Adicionar Cliente</span></button>
                 <button id="btnLogout" class="btn btn-secondary"><i class="fas fa-sign-out-alt"></i> <span>Sair</span></button>
             </div>
         </div>
@@ -31,7 +31,7 @@
                 <button id="btnLimparFiltros" class="btn btn-secondary btn-sm"><i class="fas fa-eraser"></i> Limpar</button>
             </div>
             <div class="card-body filtros-container">
-                <input type="text" id="filtroNome" placeholder="Buscar por nome...">
+                <input type="text" id="filtroNome" placeholder="Buscar por nome ou processo...">
                 <select id="filtroLocal"><option value="">Unidade Prisional</option><option value="Guajará">Guajará</option><option value="Guaporé">Guaporé</option></select>
                 <select id="filtroCor"><option value="">Status (Cor)</option><option value="Amarelo">Amarelo (0-30d)</option><option value="Laranja">Laranja (31-90d)</option><option value="Vermelho">Vermelho (91+d)</option></select>
                 <select id="filtroRegime"><option value="">Regime Provável</option><option value="Aberto">Aberto</option><option value="Semiaberto">Semiaberto</option><option value="Fechado">Fechado</option></select>
@@ -53,7 +53,7 @@
                         <tr>
                             <th><input type="checkbox" id="selectAllCheckbox" title="Selecionar Todos"></th>
                             <th>Status</th>
-                            <th>Nome</th>
+                            <th>Nome / Processo</th>
                             <th>Dias Preso</th>
                             <th>Unidade</th>
                             <th>Data da Prisão</th>
@@ -71,13 +71,14 @@
     <div id="modal" class="modal-container hidden">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="modalTitle">Adicionar Novo Preso</h2>
+                <h2 id="modalTitle">Adicionar Novo Cliente</h2>
                 <button id="closeModalBtn" class="close-btn"><i class="fas fa-times"></i></button>
             </div>
             <form id="cadastroForm">
                 <input type="hidden" id="presoId" name="id">
                 <div class="form-grid">
                     <div class="form-group"><label for="nome">Nome Completo</label><input type="text" id="nome" name="nome" required></div>
+                    <div class="form-group"><label for="numeroProcesso">Número do Processo</label><input type="text" id="numeroProcesso" name="numero_processo"></div>
                     <div class="form-group"><label for="unidadePrisional">Unidade Prisional</label><select id="unidadePrisional" name="unidade_prisional" required><option value="">Selecione...</option><option value="Guajará">Guajará</option><option value="Guaporé">Guaporé</option></select></div>
                     <div class="form-group"><label for="quandoPrendeu">Data da Prisão</label><input type="date" id="quandoPrendeu" name="quando_prendeu" required></div>
                     <div class="form-group"><label for="ultimaRevisao">Data da Última Revisão</label><input type="date" id="ultimaRevisao" name="ultima_revisao"></div>
@@ -99,7 +100,7 @@
         <div class="social-links">
             <a href="https://github.com/dev-netinho/" target="_blank" rel="noopener noreferrer" title="GitHub"><i class="fab fa-github"></i></a>
             <a href="https://www.linkedin.com/in/jose-gc-neto/" target="_blank" rel="noopener noreferrer" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
-            <a href="https://www.instagram.com/eu.josenetosz/" target="_blank" rel="noopener noreferrer" title="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="https://www.instagram.com/netinho_gc/" target="_blank" rel="noopener noreferrer" title="Instagram"><i class="fab fa-instagram"></i></a>
         </div>
     </footer>
     
