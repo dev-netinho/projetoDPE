@@ -1,71 +1,106 @@
-# Painel de Gestão para Advocacia
+# Painel de Gestão para Advocacia (Full-Stack)
 
 ![Licença](https://img.shields.io/badge/licença-MIT-blue.svg)
 
-Um painel de controle moderno e responsivo para gerenciamento de casos de detentos, desenvolvido para advogados que necessitam de uma ferramenta prática e visual para acompanhar prazos e informações cruciais dos seus clientes.
+Um painel de controle full-stack, moderno e responsivo, para gerenciamento de casos de detentos. Desenvolvido como uma ferramenta segura e de alta performance para advogados que necessitam de uma forma prática e visual para acompanhar prazos, informações cruciais e gerar relatórios.
 
-## 🖼️ Visualização
+---
 
-*A interface principal do painel, mostrando a listagem de clientes com o sistema de cores e filtros.*
+## ✨ Funcionalidades
 
-![Painel de Gestão Screenshot](https://i.imgur.com/Gj8x35c.png)
+O sistema conta com um ciclo completo de funcionalidades para gestão de clientes, com foco em segurança e produtividade.
 
-*O formulário de cadastro/edição em um modal limpo e intuitivo.*
+-   **Autenticação Segura:** Sistema completo de registro e login de usuários. As senhas são criptografadas e o acesso às rotas é protegido por JSON Web Token (JWT), garantindo que apenas usuários autorizados possam manipular os dados.
 
-![Modal de Cadastro Screenshot](https://i.imgur.com/83u6V1r.png)
+-   **Dashboard de Clientes (Presos):**
+    -   CRUD completo (Criar, Ler, Editar, Deletar) para os registros dos clientes.
+    -   Interface limpa em tabela com paginação para lidar com grandes volumes de dados.
 
-## ✨ Funcionalidades Principais
+-   **Sistema de Status Visual:** Classificação automática dos casos por cores (Amarelo, Laranja, Vermelho) com base no tempo de detenção, permitindo uma identificação visual rápida da situação.
 
--   **Cadastro e Edição de Clientes:** Gerencie informações detalhadas dos clientes através de um formulário intuitivo em um modal.
--   **Sistema de Alerta Visual por Cores:**
-    -   🟡 **Amarelo:** Clientes com 0 a 30 dias de detenção.
-    -   🟠 **Laranja:** Clientes com 31 a 90 dias de detenção.
-    -   🔴 **Vermelho:** Clientes com mais de 90 dias de detenção.
--   **Filtragem Avançada:** Encontre clientes rapidamente usando múltiplos critérios de busca, como nome, unidade prisional, status (cor), regime provável e período da prisão.
--   **Paginação Automática:** A lista de clientes é dividida em páginas para garantir a performance e a organização, mesmo com centenas de registros.
--   **Interface Moderna e Responsiva:** O design se adapta perfeitamente a qualquer dispositivo, seja desktop, tablet ou celular (Mobile-First).
--   **Persistência de Dados Local:** Todas as informações são salvas diretamente no navegador (`localStorage`), garantindo que os dados não sejam perdidos ao fechar a aba.
--   **Notificações Interativas:** Feedback visual para ações (salvar, editar, excluir) através de toasts, sem interromper o fluxo de trabalho.
+-   **Ordenação Inteligente por Urgência:** A lista é, por padrão, ordenada pela criticidade do caso, colocando os clientes com status mais grave ou mais próximos de mudar de status no topo da lista.
+
+-   **Filtragem Avançada:** Ferramentas de filtro por nome, unidade prisional, status, regime provável e período, permitindo encontrar informações específicas rapidamente.
+
+-   **Ações em Massa:**
+    -   Seleção múltipla de registros através de checkboxes.
+    -   Exclusão de vários clientes de uma só vez, otimizando o tempo de gerenciamento.
+
+-   **Geração de Relatórios em PDF:** Exportação da lista de clientes (respeitando os filtros aplicados) para um arquivo PDF profissional com um único clique.
+
+-   **Arquitetura Full-Stack:**
+    -   **Front-end** desacoplado, construído com HTML, CSS e JavaScript puro.
+    -   **Back-end** com uma API RESTful robusta construída em Node.js e Express.
+    -   **Banco de Dados** PostgreSQL na nuvem, gerenciado pelo Supabase.
+
+---
 
 ## 🚀 Tecnologias Utilizadas
 
-Este projeto é construído puramente com tecnologias front-end, sem a necessidade de um back-end ou compilação.
+#### **Front-end**
+-   HTML5
+-   CSS3 (com Variáveis, Flexbox e Grid)
+-   JavaScript (ES6+)
+-   **Bibliotecas:**
+    -   jsPDF & jspdf-autotable (para geração de relatórios)
+    -   Font Awesome (para iconografia)
 
--   **HTML5:** Estrutura semântica e moderna.
--   **CSS3:** Estilização avançada com Variáveis CSS, Flexbox e Grid Layout.
--   **JavaScript (ES6+):** Toda a lógica interativa, manipulação de dados e interações com o DOM.
--   **Font Awesome:** Biblioteca de ícones para uma interface mais intuitiva.
--   **Google Fonts:** Tipografia moderna e legível (família Poppins).
+#### **Back-end**
+-   Node.js
+-   Express.js
+-   Supabase (PostgreSQL)
+-   **Bibliotecas:**
+    -   `jsonwebtoken` (para autenticação com JWT)
+    * `bcryptjs` (para criptografia de senhas)
+    * `cors` (para segurança de comunicação entre domínios)
+    * `dotenv` (para gerenciamento de variáveis de ambiente)
 
-## 🛠️ Instalação e Execução
+---
 
-Como este é um projeto front-end puro, não há necessidade de instalação de dependências ou processos de build.
+## 🛠️ Configuração do Ambiente Local
 
-1.  **Clone o repositório (ou baixe os arquivos):**
-    ```bash
-    git clone [https://github.com/seu-usuario/seu-repositorio.git](https://github.com/seu-usuario/seu-repositorio.git)
+O projeto é dividido em dois repositórios/pastas: `frontend` e `backend`.
+
+### Configurando o Back-end
+1.  Navegue até a pasta do back-end.
+2.  Crie um arquivo `.env` na raiz e adicione as seguintes variáveis com suas chaves:
     ```
-2.  **Navegue até a pasta do projeto:**
-    ```bash
-    cd seu-repositorio
+    SUPABASE_URL=SUA_URL_DO_SUPABASE
+    SUPABASE_KEY=SUA_CHAVE_ANON_PUBLIC
+    JWT_SECRET=SEU_SEGREDO_JWT_ALEATORIO
     ```
-3.  **Abra o arquivo `index.html`:**
-    -   Simplesmente abra o arquivo `index.html` em seu navegador de preferência (Google Chrome, Firefox, etc.).
+3.  Instale as dependências:
+    ```bash
+    npm install
+    ```
+4.  (Opcional) Popule o banco de dados com dados de teste:
+    ```bash
+    node seed.js
+    ```
+5.  Inicie o servidor local:
+    ```bash
+    node index.js
+    ```
+    O servidor estará rodando em `http://localhost:3000`.
 
-E pronto! A aplicação estará rodando localmente.
+### Configurando o Front-end
+1.  Nenhuma instalação é necessária.
+2.  Abra o arquivo `login.html` ou `index.html` em seu navegador.
+3.  **Importante:** Certifique-se de que a variável `API_URL` no topo do arquivo `script.js` e `login.js` está apontando para o endereço correto do seu back-end (local ou online).
 
-## 🧪 Como Popular com Dados de Teste
+---
 
-Para testar a aplicação com um grande volume de dados, você pode usar o script de geração de dados fictícios.
+## ☁️ Arquitetura de Deploy
 
-1.  Abra a aplicação no navegador.
-2.  Abra o Console do Desenvolvedor (`F12`).
-3.  Copie e cole o script de geração de dados (disponibilizado anteriormente) no console e pressione `Enter`.
-4.  Atualize a página (`F5`). A tabela será populada com 100 registros de teste.
+-   **Front-end:** Hospedado como um site estático no **GitHub Pages**.
+-   **Back-end:** Hospedado como um serviço web no **Render.com**.
+-   **Banco de Dados:** PostgreSQL hospedado e gerenciado pelo **Supabase**.
+
+---
 
 ## 👨‍💻 Autor
 
-Desenvolvido com dedicação por José Neto. Entre em contato ou acompanhe meus outros projetos!
+Desenvolvido por **José Neto**.
 
 <div style="display: flex; gap: 10px;">
     <a href="https://github.com/dev-netinho/" target="_blank">
@@ -74,11 +109,11 @@ Desenvolvido com dedicação por José Neto. Entre em contato ou acompanhe meus 
     <a href="https://www.linkedin.com/in/jose-gc-neto/" target="_blank">
         <img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn">
     </a>
-    <a href="https://www.instagram.com/eu.josenetosz/" target="_blank">
+    <a href="https://www.instagram.com/netinho_gc/" target="_blank">
         <img src="https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white" alt="Instagram">
     </a>
 </div>
 
 ## 📄 Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+Este projeto está sob a licença MIT.
