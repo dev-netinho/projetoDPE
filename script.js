@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const toastContainer = document.getElementById('toastContainer');
 
     // --- ESTADO DA APLICAÇÃO ---
-    const API_URL = 'https://painel-advocacia-api-netinho.onrender.com'; // O endereço do nosso back-end!
+    const API_URL = 'https://painel-advocacia-api-netinho.onrender.com/api'; // O endereço do nosso back-end!
     let todosPresos = []; // Array para guardar todos os registros do banco
     let currentPage = 1;
     const rowsPerPage = 15;
