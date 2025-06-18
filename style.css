@@ -1,4 +1,3 @@
-/* --- GERAL E VARIÁVEIS --- */
 :root {
     --cor-primaria: #005f73;
     --cor-secundaria: #0a9396;
@@ -37,7 +36,6 @@ body {
     padding: 0 20px;
 }
 
-/* --- HEADER --- */
 .main-header {
     background-color: var(--cor-card);
     padding: 15px 30px;
@@ -75,8 +73,20 @@ body {
     font-size: 0.9em;
     margin-right: 10px;
 }
+.nav-link {
+    color: var(--cor-texto);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9em;
+    padding: 8px 12px;
+    border-radius: var(--raio-borda);
+    transition: background-color 0.3s ease;
+    margin-right: 10px;
+}
+.nav-link:hover {
+    background-color: #f0f2f5;
+}
 
-/* --- BOTÕES --- */
 .btn {
     padding: 10px 20px;
     border: none;
@@ -97,7 +107,6 @@ body {
 .btn-danger:hover { background-color: #d43f3a; }
 .btn-sm { padding: 5px 10px; font-size: 0.9em; }
 
-/* --- CARDS --- */
 .card {
     background-color: var(--cor-card);
     border-radius: var(--raio-borda);
@@ -119,7 +128,6 @@ body {
     gap: 10px;
 }
 
-/* --- FILTROS --- */
 .filtros-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -141,7 +149,6 @@ input:focus, select:focus, textarea:focus {
     box-shadow: 0 0 0 2px rgba(0, 95, 115, 0.2);
 }
 
-/* --- TABELA --- */
 .table-wrapper { overflow-x: auto; }
 table {
     width: 100%;
@@ -167,8 +174,8 @@ tr.selecionada {
     font-weight: 500;
 }
 .status-dot {
-    height: 12px;
-    width: 12px;
+    height: 15px;
+    width: 15px;
     border-radius: 50%;
     display: inline-block;
 }
@@ -198,7 +205,27 @@ tr.selecionada {
     color: var(--cor-texto-claro);
 }
 
-/* --- MODAL --- */
+#adminPanel {
+    transition: all 0.4s ease-in-out;
+    max-height: 0;
+    overflow: hidden;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-bottom: 0;
+    border-width: 0;
+}
+#adminPanel:not(.hidden) {
+    max-height: 1000px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    margin-bottom: 25px;
+    border-width: 1px;
+}
+#userTable .btn-success {
+    background-color: var(--cor-sucesso);
+    color: white;
+}
+
 .modal-container {
     position: fixed;
     top: 0;
@@ -259,7 +286,6 @@ tr.selecionada {
     gap: 10px;
 }
 
-/* --- TOAST NOTIFICATIONS --- */
 #toastContainer {
     position: fixed;
     top: 80px;
@@ -285,7 +311,6 @@ tr.selecionada {
 @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
 @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
 
-/* --- PAGINAÇÃO --- */
 .paginacao-container {
     padding: 20px;
     display: flex;
@@ -310,7 +335,6 @@ tr.selecionada {
 }
 .page-btn:disabled { color: var(--cor-texto-claro); cursor: not-allowed; }
 
-/* --- RODAPÉ --- */
 .main-footer {
     text-align: center;
     padding: 25px;
@@ -349,17 +373,16 @@ tr.selecionada {
     display: none !important;
 }
 
-/* --- RESPONSIVIDADE --- */
 @media (max-width: 768px) {
     .header-content { flex-direction: column; gap: 15px; }
     .filtros-container { grid-template-columns: 1fr 1fr; }
     .form-grid { grid-template-columns: 1fr; }
-    th:nth-child(5), td:nth-child(5), /* Data da Prisão */
-    th:nth-child(7), td:nth-child(7), /* Regime */
-    th:nth-child(8), td:nth-child(8) { display: none; } /* Primário */
+    th:nth-child(5), td:nth-child(5),
+    th:nth-child(7), td:nth-child(7),
+    th:nth-child(8), td:nth-child(8) { display: none; }
 }
 @media (max-width: 480px) {
     .filtros-container { grid-template-columns: 1fr; }
-    #btnAdicionarNovo span, #btnLogout span { display: none; }
-    #btnAdicionarNovo, #btnLogout { padding: 10px 12px; }
+    .header-actions span { display: none; }
+    .header-actions .btn { padding: 10px 12px; }
 }

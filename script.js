@@ -64,9 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = 'login.html';
             throw new Error('Token inválido ou expirado.');
         }
-
         if (response.status === 204) return null;
-
         const responseData = await response.json();
         if (!response.ok) throw new Error(responseData.error || 'Ocorreu um erro.');
         return responseData;
@@ -125,7 +123,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             tr.innerHTML = `
                 <td><input type="checkbox" class="preso-checkbox" value="${preso.id}" ${isChecked ? 'checked' : ''}></td>
-                <td><span class="status-dot alerta-${statusCor}" title="${statusCor.charAt(0).toUpperCase() + statusCor.slice(1)}"></span></td>
                 <td class="nome-processo-cell">
                     ${preso.nome}
                     <span class="numero-processo">Proc: ${preso.numero_processo || 'N/A'}</span>
@@ -133,6 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${diasPreso}</td>
                 <td>${preso.unidade_prisional}</td>
                 <td>${new Date(preso.quando_prendeu).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
+                <td><span class="status-dot alerta-${statusCor}" title="${statusCor.charAt(0).toUpperCase() + statusCor.slice(1)}"></span></td>
                 <td>${preso.regime_provavel}</td>
                 <td>${preso.reu_primario}</td>
                 <td class="acoes-cell">
@@ -342,10 +340,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${user.status}</td>
                 <td>${user.role}</td>
                 <td>
-                    ${user.status === 'pending' ? `<button class="btn btn-sm btn-success" onclick="aprovarUsuario(${user.id})">Aprovar</button>` : 'N/A'}
+                    ${user.status === 'pending' ? `<button class="btn btn-sm btn-success btn-approve" data-userid="${user.id}">Aprovar</button>` : '—'}
                 </td>
             `;
             userTableBody.appendChild(tr);
+        });
+
+        document.querySelectorAll('.btn-approve').forEach(button => {
+            button.addEventListener('click', async (e) => {
+                const userId = e.target.dataset.userid;
+                try {
+                    await fetchApi(`/api/admin/users/${userId}/approve`, { method: 'PATCH' });
+                    showToast('Usuário aprovado com sucesso!');
+                    carregarPainelAdmin();
+                } catch (error) {
+                    showToast(error.message, 'error');
+                }
+            });
         });
     };
     
@@ -369,7 +380,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const setupAdminFeatures = (userData) => {
         if (userData && userData.role === 'admin') {
             adminLink.classList.remove('hidden');
-            adminPanel.classList.remove('hidden');
+            adminLink.addEventListener('click', () => {
+                adminPanel.classList.toggle('hidden');
+            });
             carregarPainelAdmin();
         }
     };
