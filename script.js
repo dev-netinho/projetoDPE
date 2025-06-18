@@ -24,38 +24,47 @@ document.addEventListener('DOMContentLoaded', () => {
     const toastContainer = document.getElementById('toastContainer');
 
     // --- ESTADO DA APLICAÇÃO ---
-    let presos = JSON.parse(localStorage.getItem('presosEryca')) || [];
+    const API_URL = 'https://painel-advocacia-api-netinho.onrender.com'; // O endereço do nosso back-end!
+    let todosPresos = []; // Array para guardar todos os registros do banco
     let currentPage = 1;
-    const rowsPerPage = 15; // Define quantos registros por página
+    const rowsPerPage = 15;
     const dataAtual = new Date();
 
-    // --- FUNÇÕES DE LÓGICA DE NEGÓCIO ---
-    const salvarPresos = () => localStorage.setItem('presosEryca', JSON.stringify(presos));
+    // --- FUNÇÕES DE LÓGICA DE NEGÓCIO (CÁLCULOS) ---
     const calcularDiasPreso = (data) => data ? Math.max(0, Math.ceil((dataAtual - new Date(data)) / (1000 * 60 * 60 * 24))) : 0;
     const getStatusCor = (dias) => (dias <= 30) ? 'Amarelo' : (dias <= 90) ? 'Laranja' : 'Vermelho';
+
+    // --- LÓGICA DE INTERAÇÃO COM API ---
+    const buscarDados = async () => {
+        try {
+            const response = await fetch(`${API_URL}/presos`);
+            if (!response.ok) throw new Error('Erro ao buscar dados da API');
+            todosPresos = await response.json();
+            aplicarFiltros();
+        } catch (error) {
+            console.error(error);
+            showToast('Falha ao carregar dados. Verifique se o servidor back-end está rodando.', 'error');
+        }
+    };
 
     // --- LÓGICA DO MODAL ---
     const openModal = (isEdit = false, preso = null) => {
         form.reset();
         if (isEdit && preso) {
             modalTitle.textContent = 'Editar Registro';
-            presoIdInput.value = preso.id;
-            document.getElementById('nome').value = preso.nome;
-            document.getElementById('unidadePrisional').value = preso.unidadePrisional;
-            document.getElementById('quandoPrendeu').value = preso.quandoPrendeu;
-            document.getElementById('ultimaRevisao').value = preso.ultimaRevisao;
-            document.getElementById('reuPrimario').value = preso.reuPrimario;
-            document.getElementById('regimeProvavel').value = preso.regimeProvavel;
-            document.getElementById('observacao').value = preso.observacao;
+            // Preenche os campos do formulário com os dados do preso
+            // O 'id' e os outros campos serão preenchidos pelo seu 'name' correspondente
+            Object.keys(preso).forEach(key => {
+                const input = form.querySelector(`[name=${key}]`);
+                if (input) input.value = preso[key];
+            });
         } else {
             modalTitle.textContent = 'Adicionar Novo Preso';
             presoIdInput.value = '';
         }
         modal.classList.remove('hidden');
     };
-
     const closeModal = () => modal.classList.add('hidden');
-
     btnAdicionarNovo.addEventListener('click', () => openModal());
     closeModalBtn.addEventListener('click', closeModal);
     btnCancelarModal.addEventListener('click', closeModal);
@@ -73,23 +82,22 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     // --- RENDERIZAÇÃO E PAGINAÇÃO ---
-    const renderizarTabela = (lista = presos) => {
+    const renderizarTabela = (lista = todosPresos) => {
         tabelaBody.innerHTML = '';
         const start = (currentPage - 1) * rowsPerPage;
         const paginatedItems = lista.slice(start, start + rowsPerPage);
-
         paginatedItems.forEach(preso => {
-            const diasPreso = calcularDiasPreso(preso.quandoPrendeu);
+            const diasPreso = calcularDiasPreso(preso.quando_prendeu);
             const statusCor = getStatusCor(diasPreso).toLowerCase();
             tabelaBody.innerHTML += `
                 <tr>
                     <td><span class="status-dot alerta-${statusCor}" title="${statusCor.charAt(0).toUpperCase() + statusCor.slice(1)}"></span></td>
                     <td>${preso.nome}</td>
                     <td>${diasPreso}</td>
-                    <td>${preso.unidadePrisional}</td>
-                    <td>${new Date(preso.quandoPrendeu).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</td>
-                    <td>${preso.regimeProvavel}</td>
-                    <td>${preso.reuPrimario}</td>
+                    <td>${preso.unidade_prisional}</td>
+                    <td>${new Date(preso.quando_prendeu).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</td>
+                    <td>${preso.regime_provavel}</td>
+                    <td>${preso.reu_primario}</td>
                     <td class="acoes-cell">
                         <button onclick="prepararEdicao('${preso.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                         <button onclick="excluirPreso('${preso.id}')" title="Excluir"><i class="fas fa-trash"></i></button>
@@ -105,7 +113,6 @@ document.addEventListener('DOMContentLoaded', () => {
         paginacaoContainer.innerHTML = "";
         const pageCount = Math.ceil(items.length / rowsPerPage);
         if (pageCount <= 1) return;
-
         const createButton = (text, page, isDisabled = false) => {
             const btn = document.createElement('button');
             btn.className = 'page-btn';
@@ -117,86 +124,102 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             return btn;
         };
-
         paginacaoContainer.appendChild(createButton('<i class="fas fa-angle-left"></i>', currentPage - 1, currentPage === 1));
-        
         for (let i = 1; i <= pageCount; i++) {
             const btn = createButton(i, i);
             if (i === currentPage) btn.classList.add('active');
             paginacaoContainer.appendChild(btn);
         }
-        
         paginacaoContainer.appendChild(createButton('<i class="fas fa-angle-right"></i>', currentPage + 1, currentPage === pageCount));
     };
 
-    // --- CRUD E FILTROS ---
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const id = presoIdInput.value;
-        const dadosPreso = {
-            nome: document.getElementById('nome').value.trim(),
-            unidadePrisional: document.getElementById('unidadePrisional').value,
-            quandoPrendeu: document.getElementById('quandoPrendeu').value,
-            ultimaRevisao: document.getElementById('ultimaRevisao').value,
-            reuPrimario: document.getElementById('reuPrimario').value,
-            regimeProvavel: document.getElementById('regimeProvavel').value,
-            observacao: document.getElementById('observacao').value.trim()
-        };
+    // --- CRUD E FILTROS COM API ---
+    form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = presoIdInput.value;
+    const dadosForm = new FormData(form);
+    const dadosPreso = Object.fromEntries(dadosForm.entries());
+    
+    // --- LINHA DE CORREÇÃO ADICIONADA AQUI ---
+    // Se não há um 'id' (ou seja, estamos criando um novo preso),
+    // removemos a propriedade 'id' para que o banco de dados a gere automaticamente.
+    if (!id) {
+        delete dadosPreso.id;
+    }
+    
+    // Remove valores vazios para não enviar 'null' para campos opcionais como data de revisão
+    if (!dadosPreso.ultima_revisao) delete dadosPreso.ultima_revisao;
+    
+    try {
+        let response;
+        let url = `${API_URL}/presos`;
+        let method = 'POST';
 
         if (id) {
-            const index = presos.findIndex(p => p.id === id);
-            if (index > -1) presos[index] = { ...presos[index], ...dadosPreso };
-            showToast('Registro atualizado com sucesso!');
-        } else {
-            dadosPreso.id = 'preso-' + Date.now();
-            presos.unshift(dadosPreso); // Adiciona no início da lista
-            showToast('Novo preso cadastrado com sucesso!');
+            url = `${API_URL}/presos/${id}`;
+            method = 'PUT';
         }
-        salvarPresos();
+        
+        response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dadosPreso)
+        });
+        
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error || 'Falha ao salvar registro.');
+        }
+        
+        showToast(id ? 'Registro atualizado com sucesso!' : 'Novo preso cadastrado com sucesso!');
         closeModal();
-        aplicarFiltros();
-    });
+        buscarDados(); // Recarrega os dados do banco
+    } catch (error) {
+        console.error(error);
+        showToast(error.message, 'error');
+    }
+});
 
     window.prepararEdicao = (id) => {
-        const preso = presos.find(p => p.id === id);
+        const preso = todosPresos.find(p => p.id === id);
         if (preso) openModal(true, preso);
     };
     
-    window.excluirPreso = (id) => {
+    window.excluirPreso = async (id) => {
         if (confirm('Tem certeza que deseja excluir permanentemente este registro?')) {
-            presos = presos.filter(p => p.id !== id);
-            salvarPresos();
-            showToast('Registro excluído.', 'error');
-            aplicarFiltros();
+            try {
+                const response = await fetch(`${API_URL}/presos/${id}`, { method: 'DELETE' });
+                if (!response.ok) throw new Error('Falha ao excluir registro.');
+                showToast('Registro excluído.', 'error');
+                buscarDados();
+            } catch (error) {
+                console.error(error);
+                showToast(error.message, 'error');
+            }
         }
     };
     
     const aplicarFiltros = (resetPage = true) => {
         if(resetPage) currentPage = 1;
-        let presosFiltrados = [...presos];
+        let presosFiltrados = [...todosPresos];
         
         const nomeTermo = filtros.nome.value.toLowerCase();
         if (nomeTermo) presosFiltrados = presosFiltrados.filter(p => p.nome.toLowerCase().includes(nomeTermo));
-        if (filtros.local.value) presosFiltrados = presosFiltrados.filter(p => p.unidadePrisional === filtros.local.value);
-        if (filtros.regime.value) presosFiltrados = presosFiltrados.filter(p => p.regimeProvavel === filtros.regime.value);
-        if (filtros.cor.value) presosFiltrados = presosFiltrados.filter(p => getStatusCor(calcularDiasPreso(p.quandoPrendeu)) === filtros.cor.value);
-        if (filtros.dataInicio.value) presosFiltrados = presosFiltrados.filter(p => p.quandoPrendeu >= filtros.dataInicio.value);
-        if (filtros.dataFim.value) presosFiltrados = presosFiltrados.filter(p => p.quandoPrendeu <= filtros.dataFim.value);
+        if (filtros.local.value) presosFiltrados = presosFiltrados.filter(p => p.unidade_prisional === filtros.local.value);
+        if (filtros.regime.value) presosFiltrados = presosFiltrados.filter(p => p.regime_provavel === filtros.regime.value);
+        if (filtros.cor.value) presosFiltrados = presosFiltrados.filter(p => getStatusCor(calcularDiasPreso(p.quando_prendeu)) === filtros.cor.value);
+        if (filtros.dataInicio.value) presosFiltrados = presosFiltrados.filter(p => p.quando_prendeu >= filtros.dataInicio.value);
+        if (filtros.dataFim.value) presosFiltrados = presosFiltrados.filter(p => p.quando_prendeu <= filtros.dataFim.value);
 
         renderizarTabela(presosFiltrados);
-        return presosFiltrados; // Retorna para uso interno
+        return presosFiltrados;
     };
-
-    Object.values(filtros).forEach(f => {
-        f.addEventListener('input', () => aplicarFiltros());
-        f.addEventListener('change', () => aplicarFiltros());
-    });
-    
+    Object.values(filtros).forEach(f => f.addEventListener('input', () => aplicarFiltros()));
     btnLimparFiltros.addEventListener('click', () => {
         Object.values(filtros).forEach(f => f.value = '');
         aplicarFiltros();
     });
 
     // --- INICIALIZAÇÃO ---
-    aplicarFiltros();
+    buscarDados(); // A mágica começa aqui!
 });
