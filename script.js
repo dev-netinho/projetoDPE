@@ -31,8 +31,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnExcluirSelecionados = document.getElementById('btnExcluirSelecionados');
     const selectAllCheckbox = document.getElementById('selectAllCheckbox');
     const btnGerarPDF = document.getElementById('btnGerarPDF');
+    const adminPanel = document.getElementById('adminPanel');
+    const adminLink = document.getElementById('adminLink');
+    const userTableBody = document.getElementById('userTableBody');
 
-    const API_URL = 'https://painel-advocacia-api-netinho.onrender.com/api';
+    const API_URL = 'https://painel-advocacia-api-netinho.onrender.com';
     const TOKEN = localStorage.getItem('authToken');
     let todosPresos = []; 
     let idsSelecionados = [];
@@ -50,20 +53,28 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         const config = { ...options, headers: { ...headers, ...options.headers }};
         const response = await fetch(`${API_URL}${endpoint}`, config);
+        
         if (response.status === 401 || response.status === 403) {
+            const errorData = await response.json().catch(() => ({}));
+            if (errorData.error === 'Acesso negado. Requer permissão de administrador.') {
+                showToast(errorData.error, 'error');
+                return null;
+            }
             localStorage.clear();
             window.location.href = 'login.html';
-            throw new Error('Token inválido ou expirado. Por favor, faça o login novamente.');
+            throw new Error('Token inválido ou expirado.');
         }
+
         if (response.status === 204) return null;
+
         const responseData = await response.json();
-        if (!response.ok) throw new Error(responseData.error || 'Ocorreu um erro na requisição.');
+        if (!response.ok) throw new Error(responseData.error || 'Ocorreu um erro.');
         return responseData;
     };
 
     const buscarDados = async () => {
         try {
-            todosPresos = await fetchApi('/presos');
+            todosPresos = await fetchApi('/api/presos');
             aplicarFiltros();
         } catch (error) {
             console.error(error);
@@ -247,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!dadosPreso.numero_processo) delete dadosPreso.numero_processo;
 
         try {
-            const endpoint = id ? `/presos/${id}` : '/presos';
+            const endpoint = id ? `/api/presos/${id}` : '/api/presos';
             const method = id ? 'PUT' : 'POST';
             await fetchApi(endpoint, { method, body: JSON.stringify(dadosPreso) });
             showToast(id ? 'Registro atualizado com sucesso!' : 'Novo cliente cadastrado com sucesso!');
@@ -267,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.excluirPreso = async (id) => {
         if (confirm('Tem certeza que deseja excluir permanentemente este registro?')) {
             try {
-                await fetchApi(`/presos/${id}`, { method: 'DELETE' });
+                await fetchApi(`/api/presos/${id}`, { method: 'DELETE' });
                 showToast('Registro excluído.', 'error');
                 buscarDados();
             } catch (error) {
@@ -281,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (idsSelecionados.length === 0) return;
         if (confirm(`Tem certeza que deseja excluir permanentemente os ${idsSelecionados.length} registros selecionados?`)) {
             try {
-                await fetchApi('/presos', { method: 'DELETE', body: JSON.stringify({ ids: idsSelecionados }) });
+                await fetchApi('/api/presos', { method: 'DELETE', body: JSON.stringify({ ids: idsSelecionados }) });
                 showToast(`${idsSelecionados.length} registros excluídos com sucesso.`, 'error');
                 idsSelecionados = [];
                 buscarDados();
@@ -311,16 +322,63 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const exibirInfoUsuario = () => {
         const userDataString = localStorage.getItem('userData');
-        if (userDataString) {
-            const userData = JSON.parse(userDataString);
-            userNameSpan.textContent = `Olá, ${userData.full_name || userData.email}`;
+        if (!userDataString) {
+            localStorage.clear();
+            window.location.href = 'login.html';
+            return null;
+        }
+        const userData = JSON.parse(userDataString);
+        userNameSpan.textContent = `Olá, ${userData.full_name || userData.email}`;
+        return userData;
+    };
+
+    const renderizarTabelaUsuarios = (users) => {
+        userTableBody.innerHTML = '';
+        users.forEach(user => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${user.full_name || 'N/A'}</td>
+                <td>${user.email}</td>
+                <td>${user.status}</td>
+                <td>${user.role}</td>
+                <td>
+                    ${user.status === 'pending' ? `<button class="btn btn-sm btn-success" onclick="aprovarUsuario(${user.id})">Aprovar</button>` : 'N/A'}
+                </td>
+            `;
+            userTableBody.appendChild(tr);
+        });
+    };
+    
+    const carregarPainelAdmin = async () => {
+        const users = await fetchApi('/api/admin/users');
+        if(users) {
+            renderizarTabelaUsuarios(users);
+        }
+    };
+
+    window.aprovarUsuario = async (userId) => {
+        try {
+            await fetchApi(`/api/admin/users/${userId}/approve`, { method: 'PATCH' });
+            showToast('Usuário aprovado com sucesso!');
+            carregarPainelAdmin();
+        } catch (error) {
+            showToast(error.message, 'error');
+        }
+    };
+    
+    const setupAdminFeatures = (userData) => {
+        if (userData && userData.role === 'admin') {
+            adminLink.classList.remove('hidden');
+            adminPanel.classList.remove('hidden');
+            carregarPainelAdmin();
         }
     };
 
     if (TOKEN) {
-        exibirInfoUsuario();
+        const currentUser = exibirInfoUsuario();
         configurarLogout();
         buscarDados();
+        setupAdminFeatures(currentUser);
         btnAdicionarNovo.addEventListener("click", () => openModal());
         closeModalBtn.addEventListener("click", closeModal);
         btnCancelarModal.addEventListener("click", closeModal);

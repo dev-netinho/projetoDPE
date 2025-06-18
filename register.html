@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Painel de Gestão</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="register.css">
+</head>
+<body>
+    <div class="register-container">
+        <div class="register-box">
+            <img src="assets/Logo_DPE_dark_h_308px.webp" alt="Logo Advocacia" class="logo">
+            <h2>Solicitar Acesso</h2>
+            <p>Preencha seus dados para solicitar acesso ao painel.</p>
+            <form id="registerForm">
+                <div class="input-group">
+                    <label for="fullName">Nome Completo</label>
+                    <input type="text" id="fullName" name="full_name" required>
+                </div>
+                <div class="input-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="btn-register">Registrar</button>
+            </form>
+            <div id="message" class="message-box hidden"></div>
+            <div class="login-link">
+                <p>Já tem uma conta? <a href="login.html">Faça o login</a></p>
+            </div>
+        </div>
+    </div>
+    <script src="register.js"></script>
+</body>
+</html>

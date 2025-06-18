@@ -18,16 +18,38 @@
                 <span>Painel de Gestão</span>
             </div>
             <div class="header-actions">
+                <a href="#" id="adminLink" class="nav-link hidden"><i class="fas fa-users-cog"></i> <span>Gerenciar Usuários</span></a>
                 <span id="userName" class="user-name"></span>
                 <button id="btnAdicionarNovo" class="btn btn-primary"><i class="fas fa-plus"></i> <span>Adicionar Cliente</span></button>
                 <button id="btnLogout" class="btn btn-secondary"><i class="fas fa-sign-out-alt"></i> <span>Sair</span></button>
             </div>
         </div>
     </header>
+
     <main class="container">
+        <div id="adminPanel" class="card hidden">
+            <div class="card-header">
+                <h3><i class="fas fa-user-shield"></i> Painel de Administração de Usuários</h3>
+            </div>
+            <div class="card-body table-wrapper">
+                <table id="userTable">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Permissão</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
         <div class="card filtros-card">
             <div class="card-header">
-                <h3><i class="fas fa-filter"></i> Filtros</h3>
+                <h3><i class="fas fa-filter"></i> Filtros de Clientes</h3>
                 <button id="btnLimparFiltros" class="btn btn-secondary btn-sm"><i class="fas fa-eraser"></i> Limpar</button>
             </div>
             <div class="card-body filtros-container">
@@ -39,6 +61,7 @@
                 <input type="date" id="filtroDataFim" title="Data de prisão final">
             </div>
         </div>
+
         <div class="card">
             <div class="card-header">
                 <h3 id="contadorRegistros"></h3>
@@ -68,6 +91,7 @@
              <div id="paginacaoContainer" class="paginacao-container"></div>
         </div>
     </main>
+    
     <div id="modal" class="modal-container hidden">
         <div class="modal-content">
             <div class="modal-header">
@@ -93,7 +117,9 @@
             </form>
         </div>
     </div>
+    
     <div id="toastContainer"></div>
+
     <footer class="main-footer">
         <p>&copy; 2025 Painel de Gestão para Dr. Eryca. Todos os direitos reservados.</p>
         <p class="developer-credit">Desenvolvido com <i class="fas fa-heart"></i> por José Neto</p>
