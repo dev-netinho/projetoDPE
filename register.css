@@ -1,1 +1,142 @@
-:root{--cor-primaria:#005f73;--cor-fundo:#f0f2f5;--cor-card:#fff;--cor-texto:#34495e;--cor-vermelho:#ef5350;--cor-sucesso:#66bb6a;--font-principal:'Poppins',sans-serif;--raio-borda:8px}body{font-family:var(--font-principal);background-color:var(--cor-fundo);display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;padding:20px 0}.register-container{padding:20px}.register-box{background-color:var(--cor-card);padding:40px;border-radius:var(--raio-borda);box-shadow:0 10px 25px rgba(0,0,0,.1);width:100%;max-width:400px;text-align:center}.logo{height:60px;margin-bottom:15px}h2{color:var(--cor-primaria);margin-bottom:10px}.register-box p{color:var(--cor-texto-claro);margin-bottom:30px}.input-group{text-align:left;margin-bottom:20px}.input-group label{display:block;margin-bottom:5px;font-weight:500;font-size:.9em}.input-group input{width:100%;padding:12px;border:1px solid #e0e0e0;border-radius:var(--raio-borda);font-size:1em}.btn-register{width:100%;padding:15px;border:none;border-radius:var(--raio-borda);background-color:var(--cor-primaria);color:#fff;font-size:1.1em;font-weight:600;cursor:pointer;transition:background-color .3s ease}.btn-register:hover{background-color:#004c5a}.message-box{margin-top:15px;font-size:.9em;padding:10px;border-radius:var(--raio-borda)}.message-box.success{color:#155724;background-color:#d4edda;border:1px solid #c3e6cb}.message-box.error{color:var(--cor-vermelho)}.login-link{margin-top:20px;font-size:.9em}.login-link a{color:var(--cor-primaria);text-decoration:none;font-weight:600}.hidden{display:none}
+:root {
+    --cor-primaria: #005f73;
+    --cor-fundo: #f0f2f5;
+    --cor-card: #ffffff;
+    --cor-texto: #34495e;
+    --cor-texto-claro: #7f8c8d;
+    --cor-vermelho: #ef5350;
+    --cor-sucesso: #66bb6a;
+    --font-principal: 'Poppins', sans-serif;
+    --raio-borda: 8px;
+}
+
+body {
+    font-family: var(--font-principal);
+    background-color: var(--cor-fundo);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+}
+
+.register-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.register-box {
+    background-color: var(--cor-card);
+    padding: 40px;
+    border-radius: var(--raio-borda);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.logo {
+    height: 60px;
+    margin-bottom: 15px;
+}
+
+h2 {
+    color: var(--cor-primaria);
+    margin-bottom: 10px;
+}
+
+.register-box p {
+    color: var(--cor-texto-claro);
+    margin-bottom: 30px;
+}
+
+.input-group {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    font-size: 0.9em;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: var(--raio-borda);
+    font-size: 1em;
+}
+
+.btn-register {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: var(--raio-borda);
+    background-color: var(--cor-primaria);
+    color: #fff;
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-register:hover {
+    background-color: #004c5a;
+}
+
+.message-box {
+    margin-top: 15px;
+    font-size: 0.9em;
+    padding: 10px;
+    border-radius: var(--raio-borda);
+    border: 1px solid transparent;
+}
+
+.message-box.success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.message-box.error {
+    color: var(--cor-vermelho);
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+
+.login-link {
+    margin-top: 20px;
+    font-size: 0.9em;
+}
+
+.login-link a {
+    color: var(--cor-primaria);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.login-link a:hover {
+    text-decoration: underline;
+}
+
+.hidden {
+    display: none;
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 0;
+        align-items: flex-start;
+    }
+    .register-box {
+        box-shadow: none;
+        border-radius: 0;
+        min-height: 100vh;
+        padding-top: 60px;
+    }
+}
