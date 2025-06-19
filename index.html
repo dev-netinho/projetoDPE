@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Gestão - Dr. Eryca</title>
+    <title>Painel de Gestão - DPE/RO</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚖️</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,6 +33,25 @@
     </header>
 
     <main class="container">
+        <div id="dashboard" class="dashboard-container">
+            <div class="stat-card">
+                <h5>Total de Clientes</h5>
+                <p><i class="fas fa-users"></i> <span id="statTotal">0</span></p>
+            </div>
+            <div class="stat-card status-vermelho">
+                <h5>Alerta Vermelho</h5>
+                <p><i class="fas fa-exclamation-circle"></i> <span id="statVermelho">0</span></p>
+            </div>
+            <div class="stat-card status-laranja">
+                <h5>Alerta Laranja</h5>
+                <p><i class="fas fa-exclamation-triangle"></i> <span id="statLaranja">0</span></p>
+            </div>
+            <div class="stat-card status-amarelo">
+                <h5>Alerta Amarelo</h5>
+                <p><i class="fas fa-info-circle"></i> <span id="statAmarelo">0</span></p>
+            </div>
+        </div>
+
         <div id="adminPanel" class="card hidden">
             <div class="card-header">
                 <h3><i class="fas fa-user-shield"></i> Painel de Administração de Usuários</h3>
@@ -81,12 +100,12 @@
                     <thead>
                         <tr>
                             <th data-label=""><input type="checkbox" id="selectAllCheckbox" title="Selecionar Todos"></th>
-                            <th data-label="Nome / Processo">Nome / Processo</th>
-                            <th data-label="Dias Preso">Dias Preso</th>
-                            <th data-label="Unidade">Unidade</th>
-                            <th data-label="Data da Prisão">Data da Prisão</th>
+                            <th data-label="Nome / Processo" class="sortable" data-sort-key="nome">Nome / Processo <i class="fas fa-sort"></i></th>
+                            <th data-label="Dias Preso" class="sortable" data-sort-key="diasPreso">Dias Preso <i class="fas fa-sort"></i></th>
+                            <th data-label="Unidade" class="sortable" data-sort-key="unidade_prisional">Unidade <i class="fas fa-sort"></i></th>
+                            <th data-label="Data da Prisão" class="sortable" data-sort-key="quando_prendeu">Data da Prisão <i class="fas fa-sort"></i></th>
                             <th data-label="Status">Status</th>
-                            <th data-label="Regime">Regime</th>
+                            <th data-label="Regime" class="sortable" data-sort-key="regime_provavel">Regime <i class="fas fa-sort"></i></th>
                             <th data-label="Primário?">Primário?</th>
                             <th data-label="Ações">Ações</th>
                         </tr>

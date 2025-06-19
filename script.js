@@ -46,6 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentPage = 1;
     const rowsPerPage = 15;
     const dataAtual = new Date();
+    let sortKey = 'diasPreso';
+    let sortDirection = 'desc';
 
     const showLoader = () => loader.classList.remove('hidden');
     const hideLoader = () => loader.classList.add('hidden');
@@ -56,19 +58,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const fetchApi = async (endpoint, options = {}) => {
         showLoader();
         try {
-            const headers = {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${TOKEN}`
-            };
+            const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` };
             const config = { ...options, headers: { ...headers, ...options.headers }};
             const response = await fetch(`${API_URL}${endpoint}`, config);
-            
             if (response.status === 401 || response.status === 403) {
-                const errorData = await response.json().catch(() => ({}));
-                if (errorData.error === 'Acesso negado. Requer permissão de administrador.') {
-                    showToast(errorData.error, 'error');
-                    return null;
-                }
                 localStorage.clear();
                 window.location.href = 'login.html';
                 throw new Error('Token inválido ou expirado.');
@@ -101,11 +94,8 @@ document.addEventListener('DOMContentLoaded', () => {
             Object.keys(preso).forEach(key => {
                 const input = form.querySelector(`[name=${key}]`);
                 if (input) {
-                    if (input.type === 'date' && preso[key]) {
-                        input.value = new Date(preso[key]).toISOString().split('T')[0];
-                    } else {
-                        input.value = preso[key];
-                    }
+                    if (input.type === 'date' && preso[key]) input.value = new Date(preso[key]).toISOString().split('T')[0];
+                    else input.value = preso[key];
                 }
             });
         }
@@ -116,9 +106,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const showToast = (message, type = 'success') => {
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
-        toast.innerHTML = `<i class="fas fa-${"success" === type ? "check-circle" : "exclamation-circle"}"></i> ${message}`;
+        toast.innerHTML = `<i class="fas fa-${type === "success" ? "check-circle" : "exclamation-circle"}"></i> ${message}`;
         toastContainer.appendChild(toast);
         setTimeout(() => toast.remove(), 4000);
+    };
+
+    const renderizarDashboard = (lista) => {
+        document.getElementById('statTotal').textContent = lista.length;
+        let vermelho = 0, laranja = 0, amarelo = 0;
+        lista.forEach(p => {
+            const status = getStatusCor(calcularDiasPreso(p.quando_prendeu));
+            if (status === 'Vermelho') vermelho++;
+            else if (status === 'Laranja') laranja++;
+            else if (status === 'Amarelo') amarelo++;
+        });
+        document.getElementById('statVermelho').textContent = vermelho;
+        document.getElementById('statLaranja').textContent = laranja;
+        document.getElementById('statAmarelo').textContent = amarelo;
     };
     
     const renderizarTabela = (lista = todosPresos) => {
@@ -181,6 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
         contadorRegistros.innerHTML = `<i class="fas fa-list-ul"></i> Mostrando ${paginatedItems.length} de ${lista.length} registros`;
         setupPaginacao(lista);
         atualizarInterfaceExclusao();
+        atualizarIconesOrdenacao();
     };
 
     const setupPaginacao = (items) => {
@@ -193,10 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isActive) btn.classList.add('active');
             btn.innerHTML = text;
             btn.disabled = isDisabled;
-            btn.addEventListener('click', () => {
-                currentPage = page;
-                renderizarTabela(aplicarFiltros(false));
-            });
+            btn.addEventListener('click', () => { currentPage = page; aplicarFiltros(false); });
             return btn;
         };
         paginacaoContainer.appendChild(createButton('<i class="fas fa-angle-left"></i>', currentPage - 1, currentPage === 1));
@@ -221,9 +223,60 @@ document.addEventListener('DOMContentLoaded', () => {
         if (filtros.cor.value) presosFiltrados = presosFiltrados.filter(p => getStatusCor(calcularDiasPreso(p.quando_prendeu)) === filtros.cor.value);
         if (filtros.dataInicio.value) presosFiltrados = presosFiltrados.filter(p => new Date(p.quando_prendeu) >= new Date(filtros.dataInicio.value));
         if (filtros.dataFim.value) presosFiltrados = presosFiltrados.filter(p => new Date(p.quando_prendeu) <= new Date(filtros.dataFim.value));
+        
+        ordenarLista(presosFiltrados, sortKey, sortDirection);
+        renderizarDashboard(presosFiltrados);
         renderizarTabela(presosFiltrados);
         return presosFiltrados;
     };
+
+    const ordenarLista = (lista, key, direction) => {
+        lista.sort((a, b) => {
+            let valA, valB;
+            if (key === 'diasPreso') {
+                valA = calcularDiasPreso(a.quando_prendeu);
+                valB = calcularDiasPreso(b.quando_prendeu);
+            } else {
+                valA = a[key];
+                valB = b[key];
+            }
+
+            if (valA === null || valA === undefined) return 1;
+            if (valB === null || valB === undefined) return -1;
+            
+            let comparison = 0;
+            if (typeof valA === 'string') {
+                comparison = valA.localeCompare(valB, 'pt-BR', { sensitivity: 'base' });
+            } else {
+                if (valA > valB) comparison = 1;
+                else if (valA < valB) comparison = -1;
+            }
+            return direction === 'asc' ? comparison : comparison * -1;
+        });
+    };
+
+    const atualizarIconesOrdenacao = () => {
+        document.querySelectorAll('th.sortable').forEach(th => {
+            const icon = th.querySelector('i');
+            icon.className = 'fas fa-sort';
+            if (th.dataset.sortKey === sortKey) {
+                icon.className = `fas fa-sort-${sortDirection === 'asc' ? 'up' : 'down'}`;
+            }
+        });
+    };
+
+    document.querySelectorAll('th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            const key = th.dataset.sortKey;
+            if (sortKey === key) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortKey = key;
+                sortDirection = 'asc';
+            }
+            aplicarFiltros(false);
+        });
+    });
 
     const atualizarInterfaceExclusao = () => {
         const btnText = btnExcluirSelecionados.querySelector('i').nextSibling;
@@ -243,25 +296,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const doc = new jsPDF();
         const dadosFiltrados = aplicarFiltros(false);
         const corpoTabela = dadosFiltrados.map(p => [
-            p.nome,
-            p.numero_processo || 'N/A',
-            calcularDiasPreso(p.quando_prendeu),
-            p.unidade_prisional,
-            new Date(p.quando_prendeu).toLocaleDateString('pt-BR'),
-            p.regime_provavel,
+            p.nome, p.numero_processo || 'N/A',
+            calcularDiasPreso(p.quando_prendeu), p.unidade_prisional,
+            new Date(p.quando_prendeu).toLocaleDateString('pt-BR'), p.regime_provavel,
         ]);
         const cabecalhoTabela = ["Nome", "Nº Processo", "Dias Preso", "Unidade", "Data Prisão", "Regime Provável"];
-        doc.setFontSize(18);
-        doc.text("Relatório de Clientes", 14, 22);
-        doc.setFontSize(11);
-        doc.setTextColor(100);
+        doc.setFontSize(18); doc.text("Relatório de Clientes", 14, 22);
+        doc.setFontSize(11); doc.setTextColor(100);
         doc.text(`Relatório gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 14, 29);
         doc.autoTable({
-            head: [cabecalhoTabela],
-            body: corpoTabela,
-            startY: 35,
-            theme: 'grid',
-            headStyles: { fillColor: [0, 95, 115] },
+            head: [cabecalhoTabela], body: corpoTabela, startY: 35,
+            theme: 'grid', headStyles: { fillColor: [0, 95, 115] },
         });
         doc.save(`relatorio_clientes_${new Date().getTime()}.pdf`);
     };
@@ -279,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const endpoint = id ? `/api/presos/${id}` : '/api/presos';
             const method = id ? 'PUT' : 'POST';
             await fetchApi(endpoint, { method, body: JSON.stringify(dadosPreso) });
-            showToast(id ? 'Registro atualizado com sucesso!' : 'Novo cliente cadastrado com sucesso!');
+            showToast(id ? 'Registro atualizado!' : 'Cliente cadastrado!');
             closeModal();
             buscarDados();
         } catch (error) {
@@ -288,76 +333,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    window.prepararEdicao = (id) => {
-        const preso = todosPresos.find(p => p.id === id);
-        if (preso) openModal(true, preso);
-    };
-    
+    window.prepararEdicao = (id) => { const preso = todosPresos.find(p => p.id === id); if (preso) openModal(true, preso); };
     window.excluirPreso = async (id) => {
         if (confirm('Tem certeza que deseja excluir permanentemente este registro?')) {
-            try {
-                await fetchApi(`/api/presos/${id}`, { method: 'DELETE' });
-                showToast('Registro excluído.', 'error');
-                buscarDados();
-            } catch (error) {
-                console.error(error);
-                showToast(error.message, 'error');
-            }
+            try { await fetchApi(`/api/presos/${id}`, { method: 'DELETE' }); showToast('Registro excluído.', 'error'); buscarDados(); } 
+            catch (error) { console.error(error); showToast(error.message, 'error'); }
         }
     };
     
     btnExcluirSelecionados.addEventListener('click', async () => {
         if (idsSelecionados.length === 0) return;
-        if (confirm(`Tem certeza que deseja excluir permanentemente os ${idsSelecionados.length} registros selecionados?`)) {
+        if (confirm(`Tem certeza que deseja excluir os ${idsSelecionados.length} registros selecionados?`)) {
             try {
                 await fetchApi('/api/presos', { method: 'DELETE', body: JSON.stringify({ ids: idsSelecionados }) });
-                showToast(`${idsSelecionados.length} registros excluídos com sucesso.`, 'error');
+                showToast(`${idsSelecionados.length} registros excluídos.`, 'error');
                 idsSelecionados = [];
                 buscarDados();
-            } catch (error) {
-                console.error(error);
-                showToast(error.message, 'error');
-            }
+            } catch (error) { console.error(error); showToast(error.message, 'error'); }
         }
     });
 
     selectAllCheckbox.addEventListener('click', () => {
         const checkboxesVisiveis = document.querySelectorAll('.preso-checkbox');
-        const isChecked = selectAllCheckbox.checked;
-        idsSelecionados = [];
-        checkboxesVisiveis.forEach(checkbox => {
-            checkbox.checked = isChecked;
-            const id = parseInt(checkbox.value);
-            const tr = checkbox.closest('tr');
-            if(isChecked) {
-                idsSelecionados.push(id);
-                tr.classList.add('selecionada');
-            } else {
-                tr.classList.remove('selecionada');
-            }
-        });
-        atualizarInterfaceExclusao();
+        checkboxesVisiveis.forEach(checkbox => { checkbox.checked = selectAllCheckbox.checked; checkbox.dispatchEvent(new Event('click', { bubbles: false })); });
+        checkboxesVisiveis.forEach(cb => cb.dispatchEvent(new Event('click', { bubbles: true }))); // Workaround to trigger individual handlers
     });
 
-    const configurarLogout = () => {
-        btnLogout.addEventListener('click', () => {
-            localStorage.clear();
-            window.location.href = 'login.html';
-        });
-    };
-
+    const configurarLogout = () => { btnLogout.addEventListener('click', () => { localStorage.clear(); window.location.href = 'login.html'; }); };
     const exibirInfoUsuario = () => {
         const userDataString = localStorage.getItem('userData');
-        if (!userDataString) {
-            localStorage.clear();
-            window.location.href = 'login.html';
-            return null;
-        }
+        if (!userDataString) { localStorage.clear(); window.location.href = 'login.html'; return null; }
         const userData = JSON.parse(userDataString);
         userNameSpan.textContent = `Olá, ${userData.full_name || userData.email}`;
         return userData;
     };
-    
     const setupAdminFeatures = (userData) => {
         if (userData && userData.role === 'admin') {
             adminLink.classList.remove('hidden');
@@ -367,76 +376,39 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     };
-
-    const carregarPainelAdmin = async () => {
-        const users = await fetchApi('/api/admin/users');
-        if(users) {
-            renderizarTabelaUsuarios(users);
-        }
-    };
-
+    const carregarPainelAdmin = async () => { const users = await fetchApi('/api/admin/users'); if(users) renderizarTabelaUsuarios(users); };
     const renderizarTabelaUsuarios = (users) => {
         userTableBody.innerHTML = '';
         users.forEach(user => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${user.full_name || 'N/A'}</td>
-                <td>${user.email}</td>
-                <td>${user.status}</td>
-                <td>${user.role}</td>
-                <td>
-                    ${user.status === 'pending' ? `<button class="btn btn-sm btn-success btn-approve" data-userid="${user.id}">Aprovar</button>` : '—'}
-                </td>
-            `;
+            tr.innerHTML = `<td>${user.full_name || 'N/A'}</td><td>${user.email}</td><td>${user.status}</td><td>${user.role}</td>
+                <td>${user.status === 'pending' ? `<button class="btn btn-sm btn-success btn-approve" data-userid="${user.id}">Aprovar</button>` : '—'}</td>`;
             userTableBody.appendChild(tr);
         });
-
         document.querySelectorAll('.btn-approve').forEach(button => {
             button.addEventListener('click', async (e) => {
                 const userId = e.target.dataset.userid;
-                try {
-                    await fetchApi(`/api/admin/users/${userId}/approve`, { method: 'PATCH' });
-                    showToast('Usuário aprovado com sucesso!');
-                    carregarPainelAdmin();
-                } catch (error) {
-                    showToast(error.message, 'error');
-                }
+                try { await fetchApi(`/api/admin/users/${userId}/approve`, { method: 'PATCH' }); showToast('Usuário aprovado!'); carregarPainelAdmin(); }
+                catch (error) { showToast(error.message, 'error'); }
             });
         });
     };
-
     const setupTheme = () => {
-        const userTheme = localStorage.getItem('theme');
-        const icon = themeToggleButton.querySelector('i');
-        if (userTheme === 'dark') {
-            document.body.classList.add('dark-mode');
-            icon.classList.remove('fa-moon');
-            icon.classList.add('fa-sun');
-        } else {
-            document.body.classList.remove('dark-mode');
-            icon.classList.remove('fa-sun');
-            icon.classList.add('fa-moon');
-        }
+        const userTheme = localStorage.getItem('theme'), icon = themeToggleButton.querySelector('i');
+        if (userTheme === 'dark') { document.body.classList.add('dark-mode'); icon.className = 'fas fa-sun'; }
+        else { document.body.classList.remove('dark-mode'); icon.className = 'fas fa-moon'; }
     };
-
     const toggleTheme = () => {
         document.body.classList.toggle('dark-mode');
-        const isDarkMode = document.body.classList.contains('dark-mode');
-        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+        localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
         setupTheme();
     };
-
     const setupScrollToTop = () => {
         window.addEventListener('scroll', () => {
-            if (window.scrollY > 300) {
-                scrollTopBtn.classList.remove('hidden');
-            } else {
-                scrollTopBtn.classList.add('hidden');
-            }
+            if (window.scrollY > 300) scrollTopBtn.classList.remove('hidden');
+            else scrollTopBtn.classList.add('hidden');
         });
-        scrollTopBtn.addEventListener('click', () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
+        scrollTopBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); });
     };
     
     if (TOKEN) {
@@ -450,7 +422,11 @@ document.addEventListener('DOMContentLoaded', () => {
         closeModalBtn.addEventListener("click", closeModal);
         btnCancelarModal.addEventListener("click", closeModal);
         modal.addEventListener("click", e => { if (e.target === modal) closeModal() });
-        btnLimparFiltros.addEventListener("click", () => { Object.values(filtros).forEach(f => f.value = ""); aplicarFiltros() });
+        btnLimparFiltros.addEventListener("click", () => {
+            Object.values(filtros).forEach(f => f.value = "");
+            sortKey = 'diasPreso'; sortDirection = 'desc';
+            aplicarFiltros();
+        });
         Object.values(filtros).forEach(f => f.addEventListener("input", () => aplicarFiltros()));
         btnGerarPDF.addEventListener('click', gerarPDF);
         themeToggleButton.addEventListener('click', toggleTheme);
