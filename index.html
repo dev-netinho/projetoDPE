@@ -11,6 +11,10 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div id="loader" class="loader-container hidden">
+        <div class="loader-spinner"></div>
+    </div>
+
     <header class="main-header">
         <div class="header-content">
             <div class="logo-container">
@@ -18,13 +22,15 @@
                 <span>Painel de Gestão</span>
             </div>
             <div class="header-actions">
-                <button id="adminLink" class="btn btn-secondary btn-sm hidden"><i class="fas fa-users-cog"></i> <span>Gerenciar Usuários</span></button>
+                <button id="theme-toggle" class="btn-icon" title="Alternar Tema"><i class="fas fa-moon"></i></button>
+                <button id="adminLink" class="btn btn-secondary btn-sm hidden"><i class="fas fa-users-cog"></i> <span class="desktop-only">Gerenciar Usuários</span></button>
                 <span id="userName" class="user-name"></span>
-                <button id="btnAdicionarNovo" class="btn btn-primary"><i class="fas fa-plus"></i> <span>Adicionar Cliente</span></button>
-                <button id="btnLogout" class="btn btn-secondary"><i class="fas fa-sign-out-alt"></i> <span>Sair</span></button>
+                <button id="btnAdicionarNovo" class="btn btn-primary"><i class="fas fa-plus"></i> <span class="desktop-only">Adicionar Cliente</span></button>
+                <button id="btnLogout" class="btn btn-secondary"><i class="fas fa-sign-out-alt"></i> <span class="desktop-only">Sair</span></button>
             </div>
         </div>
     </header>
+
     <main class="container">
         <div id="adminPanel" class="card hidden">
             <div class="card-header">
@@ -73,15 +79,15 @@
                 <table>
                     <thead>
                         <tr>
-                            <th><input type="checkbox" id="selectAllCheckbox" title="Selecionar Todos"></th>
+                            <th class="checkbox-cell"><input type="checkbox" id="selectAllCheckbox" title="Selecionar Todos"></th>
                             <th>Nome / Processo</th>
                             <th>Dias Preso</th>
                             <th>Unidade</th>
                             <th>Data da Prisão</th>
-                            <th>Status</th>
+                            <th class="status-cell-header">Status</th>
                             <th>Regime</th>
                             <th>Primário?</th>
-                            <th>Ações</th>
+                            <th class="actions-cell-header">Ações</th>
                         </tr>
                     </thead>
                     <tbody id="tabelaPresosBody"></tbody>
@@ -118,6 +124,8 @@
     </div>
     
     <div id="toastContainer"></div>
+
+    <button id="scrollTopBtn" class="scroll-top-btn hidden" title="Voltar ao Topo"><i class="fas fa-arrow-up"></i></button>
 
     <footer class="main-footer">
         <p>&copy; 2025 Painel de Gestão para Dr. Eryca. Todos os direitos reservados.</p>

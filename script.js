@@ -34,6 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminPanel = document.getElementById('adminPanel');
     const adminLink = document.getElementById('adminLink');
     const userTableBody = document.getElementById('userTableBody');
+    const themeToggleButton = document.getElementById('theme-toggle');
+    const loader = document.getElementById('loader');
+    const scrollTopBtn = document.getElementById('scrollTopBtn');
 
     const API_URL = 'https://painel-advocacia-api-netinho.onrender.com';
     const TOKEN = localStorage.getItem('authToken');
@@ -43,31 +46,39 @@ document.addEventListener('DOMContentLoaded', () => {
     const rowsPerPage = 15;
     const dataAtual = new Date();
 
+    const showLoader = () => loader.classList.remove('hidden');
+    const hideLoader = () => loader.classList.add('hidden');
+
     const calcularDiasPreso = (data) => data ? Math.max(0, Math.ceil((dataAtual - new Date(data)) / (1000 * 60 * 60 * 24))) : 0;
     const getStatusCor = (dias) => (dias <= 30) ? 'Amarelo' : (dias <= 90) ? 'Laranja' : 'Vermelho';
 
     const fetchApi = async (endpoint, options = {}) => {
-        const headers = {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${TOKEN}`
-        };
-        const config = { ...options, headers: { ...headers, ...options.headers }};
-        const response = await fetch(`${API_URL}${endpoint}`, config);
-        
-        if (response.status === 401 || response.status === 403) {
-            const errorData = await response.json().catch(() => ({}));
-            if (errorData.error === 'Acesso negado. Requer permissão de administrador.') {
-                showToast(errorData.error, 'error');
-                return null;
+        showLoader();
+        try {
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${TOKEN}`
+            };
+            const config = { ...options, headers: { ...headers, ...options.headers }};
+            const response = await fetch(`${API_URL}${endpoint}`, config);
+            
+            if (response.status === 401 || response.status === 403) {
+                const errorData = await response.json().catch(() => ({}));
+                if (errorData.error === 'Acesso negado. Requer permissão de administrador.') {
+                    showToast(errorData.error, 'error');
+                    return null;
+                }
+                localStorage.clear();
+                window.location.href = 'login.html';
+                throw new Error('Token inválido ou expirado.');
             }
-            localStorage.clear();
-            window.location.href = 'login.html';
-            throw new Error('Token inválido ou expirado.');
+            if (response.status === 204) return null;
+            const responseData = await response.json();
+            if (!response.ok) throw new Error(responseData.error || 'Ocorreu um erro.');
+            return responseData;
+        } finally {
+            hideLoader();
         }
-        if (response.status === 204) return null;
-        const responseData = await response.json();
-        if (!response.ok) throw new Error(responseData.error || 'Ocorreu um erro.');
-        return responseData;
     };
 
     const buscarDados = async () => {
@@ -106,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toast.className = `toast ${type}`;
         toast.innerHTML = `<i class="fas fa-${"success" === type ? "check-circle" : "exclamation-circle"}"></i> ${message}`;
         toastContainer.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
+        setTimeout(() => toast.remove(), 4000);
     };
     
     const renderizarTabela = (lista = todosPresos) => {
@@ -122,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isChecked) tr.classList.add('selecionada');
 
             tr.innerHTML = `
-                <td><input type="checkbox" class="preso-checkbox" value="${preso.id}" ${isChecked ? 'checked' : ''}></td>
+                <td class="checkbox-cell"><input type="checkbox" class="preso-checkbox" value="${preso.id}" ${isChecked ? 'checked' : ''}></td>
                 <td class="nome-processo-cell">
                     ${preso.nome}
                     <span class="numero-processo">Proc: ${preso.numero_processo || 'N/A'}</span>
@@ -130,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${diasPreso}</td>
                 <td>${preso.unidade_prisional}</td>
                 <td>${new Date(preso.quando_prendeu).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
-                <td><span class="status-dot alerta-${statusCor}" title="${statusCor.charAt(0).toUpperCase() + statusCor.slice(1)}"></span></td>
+                <td class="status-cell"><span class="status-dot alerta-${statusCor}" title="${statusCor.charAt(0).toUpperCase() + statusCor.slice(1)}"></span></td>
                 <td>${preso.regime_provavel}</td>
                 <td>${preso.reu_primario}</td>
                 <td class="acoes-cell">
@@ -166,9 +177,10 @@ document.addEventListener('DOMContentLoaded', () => {
         paginacaoContainer.innerHTML = "";
         const pageCount = Math.ceil(items.length / rowsPerPage);
         if (pageCount <= 1) return;
-        const createButton = (text, page, isDisabled = false) => {
+        const createButton = (text, page, isDisabled = false, isActive = false) => {
             const btn = document.createElement('button');
             btn.className = 'page-btn';
+            if (isActive) btn.classList.add('active');
             btn.innerHTML = text;
             btn.disabled = isDisabled;
             btn.addEventListener('click', () => {
@@ -179,9 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         paginacaoContainer.appendChild(createButton('<i class="fas fa-angle-left"></i>', currentPage - 1, currentPage === 1));
         for (let i = 1; i <= pageCount; i++) {
-            const btn = createButton(i, i);
-            if (i === currentPage) btn.classList.add('active');
-            paginacaoContainer.appendChild(btn);
+            paginacaoContainer.appendChild(createButton(i, i, false, i === currentPage));
         }
         paginacaoContainer.appendChild(createButton('<i class="fas fa-angle-right"></i>', currentPage + 1, currentPage === pageCount));
     };
@@ -199,8 +209,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (filtros.local.value) presosFiltrados = presosFiltrados.filter(p => p.unidade_prisional === filtros.local.value);
         if (filtros.regime.value) presosFiltrados = presosFiltrados.filter(p => p.regime_provavel === filtros.regime.value);
         if (filtros.cor.value) presosFiltrados = presosFiltrados.filter(p => getStatusCor(calcularDiasPreso(p.quando_prendeu)) === filtros.cor.value);
-        if (filtros.dataInicio.value) presosFiltrados = presosFiltrados.filter(p => p.quando_prendeu >= filtros.dataInicio.value);
-        if (filtros.dataFim.value) presosFiltrados = presosFiltrados.filter(p => p.quando_prendeu <= filtros.dataFim.value);
+        if (filtros.dataInicio.value) presosFiltrados = presosFiltrados.filter(p => new Date(p.quando_prendeu) >= new Date(filtros.dataInicio.value));
+        if (filtros.dataFim.value) presosFiltrados = presosFiltrados.filter(p => new Date(p.quando_prendeu) <= new Date(filtros.dataFim.value));
         renderizarTabela(presosFiltrados);
         return presosFiltrados;
     };
@@ -303,12 +313,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     selectAllCheckbox.addEventListener('click', () => {
         const checkboxesVisiveis = document.querySelectorAll('.preso-checkbox');
+        const isChecked = selectAllCheckbox.checked;
+        idsSelecionados = [];
         checkboxesVisiveis.forEach(checkbox => {
-            const event = new Event('click', { bubbles: true });
-            if (checkbox.checked !== selectAllCheckbox.checked) {
-                checkbox.dispatchEvent(event);
+            checkbox.checked = isChecked;
+            const id = parseInt(checkbox.value);
+            const tr = checkbox.closest('tr');
+            if(isChecked) {
+                idsSelecionados.push(id);
+                tr.classList.add('selecionada');
+            } else {
+                tr.classList.remove('selecionada');
             }
         });
+        atualizarInterfaceExclusao();
     });
 
     const configurarLogout = () => {
@@ -328,6 +346,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const userData = JSON.parse(userDataString);
         userNameSpan.textContent = `Olá, ${userData.full_name || userData.email}`;
         return userData;
+    };
+    
+    const setupAdminFeatures = (userData) => {
+        if (userData && userData.role === 'admin') {
+            adminLink.classList.remove('hidden');
+            adminLink.addEventListener('click', async () => {
+                const isHidden = adminPanel.classList.toggle('hidden');
+                if(!isHidden) await carregarPainelAdmin();
+            });
+        }
+    };
+
+    const carregarPainelAdmin = async () => {
+        const users = await fetchApi('/api/admin/users');
+        if(users) {
+            renderizarTabelaUsuarios(users);
+        }
     };
 
     const renderizarTabelaUsuarios = (users) => {
@@ -359,39 +394,48 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     };
-    
-    const carregarPainelAdmin = async () => {
-        const users = await fetchApi('/api/admin/users');
-        if(users) {
-            renderizarTabelaUsuarios(users);
+
+    const setupTheme = () => {
+        const userTheme = localStorage.getItem('theme');
+        const icon = themeToggleButton.querySelector('i');
+        if (userTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+        } else {
+            document.body.classList.remove('dark-mode');
+            icon.classList.remove('fa-sun');
+            icon.classList.add('fa-moon');
         }
     };
 
-    window.aprovarUsuario = async (userId) => {
-        try {
-            await fetchApi(`/api/admin/users/${userId}/approve`, { method: 'PATCH' });
-            showToast('Usuário aprovado com sucesso!');
-            carregarPainelAdmin();
-        } catch (error) {
-            showToast(error.message, 'error');
-        }
-    };
-    
-    const setupAdminFeatures = (userData) => {
-        if (userData && userData.role === 'admin') {
-            adminLink.classList.remove('hidden');
-            adminLink.addEventListener('click', () => {
-                adminPanel.classList.toggle('hidden');
-            });
-            carregarPainelAdmin();
-        }
+    const toggleTheme = () => {
+        document.body.classList.toggle('dark-mode');
+        const isDarkMode = document.body.classList.contains('dark-mode');
+        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+        setupTheme();
     };
 
+    const setupScrollToTop = () => {
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                scrollTopBtn.classList.remove('hidden');
+            } else {
+                scrollTopBtn.classList.add('hidden');
+            }
+        });
+        scrollTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    };
+    
     if (TOKEN) {
+        setupTheme();
         const currentUser = exibirInfoUsuario();
         configurarLogout();
         buscarDados();
         setupAdminFeatures(currentUser);
+        setupScrollToTop();
         btnAdicionarNovo.addEventListener("click", () => openModal());
         closeModalBtn.addEventListener("click", closeModal);
         btnCancelarModal.addEventListener("click", closeModal);
@@ -399,5 +443,6 @@ document.addEventListener('DOMContentLoaded', () => {
         btnLimparFiltros.addEventListener("click", () => { Object.values(filtros).forEach(f => f.value = ""); aplicarFiltros() });
         Object.values(filtros).forEach(f => f.addEventListener("input", () => aplicarFiltros()));
         btnGerarPDF.addEventListener('click', gerarPDF);
+        themeToggleButton.addEventListener('click', toggleTheme);
     }
 });
