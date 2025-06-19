@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel de Gestão - Dr. Eryca</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚖️</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -19,7 +20,7 @@
         <div class="header-content">
             <div class="logo-container">
                 <img src="assets/Logo_DPE_dark_h_308px.webp" alt="Logo Advocacia" class="logo">
-                <span>Painel de Gestão</span>
+                <span class="desktop-only">Painel de Gestão</span>
             </div>
             <div class="header-actions">
                 <button id="theme-toggle" class="btn-icon" title="Alternar Tema"><i class="fas fa-moon"></i></button>
@@ -72,25 +73,30 @@
                 <h3 id="contadorRegistros"></h3>
                 <div class="actions-group">
                     <button id="btnGerarPDF" class="btn btn-secondary btn-sm"><i class="fas fa-file-pdf"></i> Gerar PDF</button>
-                    <button id="btnExcluirSelecionados" class="btn btn-danger btn-sm hidden"><i class="fas fa-trash-alt"></i> Excluir Selecionados</button>
+                    <button id="btnExcluirSelecionados" class="btn btn-danger btn-sm hidden"><i class="fas fa-trash-alt"></i> Excluir</button>
                 </div>
             </div>
             <div class="card-body table-wrapper">
-                <table>
+                <table class="responsive-table">
                     <thead>
                         <tr>
-                            <th class="checkbox-cell"><input type="checkbox" id="selectAllCheckbox" title="Selecionar Todos"></th>
-                            <th>Nome / Processo</th>
-                            <th>Dias Preso</th>
-                            <th>Unidade</th>
-                            <th>Data da Prisão</th>
-                            <th class="status-cell-header">Status</th>
-                            <th>Regime</th>
-                            <th>Primário?</th>
-                            <th class="actions-cell-header">Ações</th>
+                            <th data-label=""><input type="checkbox" id="selectAllCheckbox" title="Selecionar Todos"></th>
+                            <th data-label="Nome / Processo">Nome / Processo</th>
+                            <th data-label="Dias Preso">Dias Preso</th>
+                            <th data-label="Unidade">Unidade</th>
+                            <th data-label="Data da Prisão">Data da Prisão</th>
+                            <th data-label="Status">Status</th>
+                            <th data-label="Regime">Regime</th>
+                            <th data-label="Primário?">Primário?</th>
+                            <th data-label="Ações">Ações</th>
                         </tr>
                     </thead>
                     <tbody id="tabelaPresosBody"></tbody>
+                    <tfoot id="tabelaFooter" class="hidden">
+                        <tr>
+                            <td colspan="9" class="empty-table-message">Nenhum cliente encontrado.</td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
              <div id="paginacaoContainer" class="paginacao-container"></div>

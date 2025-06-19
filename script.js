@@ -7,6 +7,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     const tabelaBody = document.getElementById('tabelaPresosBody');
+    const tabelaFooter = document.getElementById('tabelaFooter');
     const contadorRegistros = document.getElementById('contadorRegistros');
     const paginacaoContainer = document.getElementById('paginacaoContainer');
     const btnLimparFiltros = document.getElementById('btnLimparFiltros');
@@ -122,6 +123,15 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const renderizarTabela = (lista = todosPresos) => {
         tabelaBody.innerHTML = '';
+        tabelaFooter.classList.add('hidden');
+
+        if (lista.length === 0) {
+            tabelaFooter.classList.remove('hidden');
+            contadorRegistros.innerHTML = `<i class="fas fa-list-ul"></i> 0 registros`;
+            paginacaoContainer.innerHTML = '';
+            return;
+        }
+
         const start = (currentPage - 1) * rowsPerPage;
         const paginatedItems = lista.slice(start, start + rowsPerPage);
 
@@ -133,18 +143,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isChecked) tr.classList.add('selecionada');
 
             tr.innerHTML = `
-                <td class="checkbox-cell"><input type="checkbox" class="preso-checkbox" value="${preso.id}" ${isChecked ? 'checked' : ''}></td>
-                <td class="nome-processo-cell">
+                <td data-label="" class="checkbox-cell"><input type="checkbox" class="preso-checkbox" value="${preso.id}" ${isChecked ? 'checked' : ''}></td>
+                <td data-label="Nome / Processo" class="nome-processo-cell">
                     ${preso.nome}
                     <span class="numero-processo">Proc: ${preso.numero_processo || 'N/A'}</span>
                 </td>
-                <td>${diasPreso}</td>
-                <td>${preso.unidade_prisional}</td>
-                <td>${new Date(preso.quando_prendeu).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
-                <td class="status-cell"><span class="status-dot alerta-${statusCor}" title="${statusCor.charAt(0).toUpperCase() + statusCor.slice(1)}"></span></td>
-                <td>${preso.regime_provavel}</td>
-                <td>${preso.reu_primario}</td>
-                <td class="acoes-cell">
+                <td data-label="Dias Preso">${diasPreso}</td>
+                <td data-label="Unidade">${preso.unidade_prisional}</td>
+                <td data-label="Data da Prisão">${new Date(preso.quando_prendeu).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
+                <td data-label="Status"><span class="status-dot alerta-${statusCor}" title="${statusCor.charAt(0).toUpperCase() + statusCor.slice(1)}"></span></td>
+                <td data-label="Regime">${preso.regime_provavel}</td>
+                <td data-label="Primário?">${preso.reu_primario}</td>
+                <td data-label="Ações" class="acoes-cell">
                     <button onclick="prepararEdicao(${preso.id})" title="Editar"><i class="fas fa-edit"></i></button>
                     <button onclick="excluirPreso(${preso.id})" title="Excluir"><i class="fas fa-trash"></i></button>
                 </td>
