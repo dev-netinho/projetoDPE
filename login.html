@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-T">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Painel de Gestão</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,7 +25,10 @@
                     <label for="password">Senha</label>
                     <input type="password" id="password" name="password" required>
                 </div>
-                <button type="submit" class="btn-login">Entrar</button>
+                <button type="submit" class="btn-login" id="btnLogin">
+                    <span class="btn-text">Entrar</span>
+                    <span class="btn-loader hidden"></span>
+                </button>
             </form>
             <div id="errorMessage" class="error-message hidden"></div>
             <div class="register-link">

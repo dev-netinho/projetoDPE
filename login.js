@@ -1,13 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
     const errorMessageDiv = document.getElementById('errorMessage');
+    const btnLogin = document.getElementById('btnLogin');
 
-    // IMPORTANTE: Use a URL pública do seu back-end no Render.com aqui!
     const API_URL = 'https://painel-advocacia-api-netinho.onrender.com';
 
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         errorMessageDiv.classList.add('hidden');
+
+        btnLogin.disabled = true;
+        btnLogin.classList.add('loading');
+        btnLogin.querySelector('.btn-text').textContent = '';
+        btnLogin.querySelector('.btn-loader').classList.remove('hidden');
 
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
@@ -27,17 +32,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(data.error || 'Falha no login.');
             }
             
-            // Se o login for bem-sucedido:
-            // 1. Salva o token e os dados do usuário no localStorage
             localStorage.setItem('authToken', data.token);
-            localStorage.setItem('userData', JSON.stringify(data.user)); // Salva o objeto do usuário
+            localStorage.setItem('userData', JSON.stringify(data.user));
 
-            // 2. Redireciona para a página principal do painel
             window.location.href = 'index.html';
 
         } catch (error) {
             errorMessageDiv.textContent = error.message;
             errorMessageDiv.classList.remove('hidden');
+        } finally {
+            btnLogin.disabled = false;
+            btnLogin.classList.remove('loading');
+            btnLogin.querySelector('.btn-text').textContent = 'Entrar';
+            btnLogin.querySelector('.btn-loader').classList.add('hidden');
         }
     });
 });
